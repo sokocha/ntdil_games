@@ -6,5 +6,9 @@ export const metadata = {
 }
 
 export default function OutliersPage() {
-  return <Outlier />
+  return (
+    <main className="min-h-screen py-4">
+      <Outlier />
+    </main>
+  )
 }
