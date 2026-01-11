@@ -1,34 +1,49 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
+
+// Type definitions
+interface GameData {
+  dayNumber?: number
+  currentRound?: number
+  roundResults?: boolean[]
+  gameComplete?: boolean
+  selections?: string[][]
+  revealed?: boolean[]
+  streak?: number
+  bestStreak?: number
+  lastPlayedDay?: number
+  lastResults?: boolean[]
+  lastGameState?: string
+}
 
 // Seeded random
-const seededRandom = (seed) => {
+const seededRandom = (seed: number): number => {
   const x = Math.sin(seed) * 10000
   return x - Math.floor(x)
 }
 
-const getDayNumber = () => {
+const getDayNumber = (): number => {
   const start = new Date('2026-01-09').getTime()
   const now = new Date().setHours(0, 0, 0, 0)
   return Math.floor((now - start) / (1000 * 60 * 60 * 24)) + 1
 }
 
-const getTimeUntilMidnight = () => {
+const getTimeUntilMidnight = (): number => {
   const now = new Date()
   const midnight = new Date()
   midnight.setHours(24, 0, 0, 0)
-  return midnight - now
+  return midnight.getTime() - now.getTime()
 }
 
-const formatTime = (ms) => {
+const formatTime = (ms: number): string => {
   const hours = Math.floor(ms / (1000 * 60 * 60))
   const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60))
   const seconds = Math.floor((ms % (1000 * 60)) / 1000)
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
 }
 
-const shuffleWithSeed = (array, seed) => {
+const shuffleWithSeed = <T,>(array: T[], seed: number): T[] => {
   const result = [...array]
   for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(seededRandom(seed + i) * (i + 1))
@@ -40,7 +55,7 @@ const shuffleWithSeed = (array, seed) => {
 // LocalStorage helpers
 const STORAGE_KEY = 'outlier_data'
 
-const loadGameData = () => {
+const loadGameData = (): GameData | null => {
   try {
     const data = localStorage.getItem(STORAGE_KEY)
     return data ? JSON.parse(data) : null
@@ -49,7 +64,7 @@ const loadGameData = () => {
   }
 }
 
-const saveGameData = (data) => {
+const saveGameData = (data: GameData): void => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
   } catch {
@@ -6867,7 +6882,7 @@ const CATEGORIES = [
 ]
 
 // Generate a round with 5 items (4 connected + 1 outlier)
-const generateRound = (difficulty, seed) => {
+const generateRound = (difficulty: number, seed: number) => {
   // Filter categories by difficulty
   const validCategories = CATEGORIES.filter((c) => c.difficulty === difficulty)
 
@@ -6906,12 +6921,24 @@ const generatePuzzle = () => {
   }
 }
 
+interface GeneratedRound {
+  items: string[]
+  outlierIndex: number
+  connection: string
+  difficulty: number
+}
+
+interface GeneratedPuzzle {
+  dayNum: number
+  rounds: GeneratedRound[]
+}
+
 export default function Outlier() {
-  const [puzzle, setPuzzle] = useState(null)
+  const [puzzle, setPuzzle] = useState<GeneratedPuzzle | null>(null)
   const [currentRound, setCurrentRound] = useState(0)
-  const [selectedIndex, setSelectedIndex] = useState(null)
-  const [roundResults, setRoundResults] = useState([])
-  const [gameState, setGameState] = useState('playing')
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
+  const [roundResults, setRoundResults] = useState<boolean[]>([])
+  const [gameState, setGameState] = useState<string>('playing')
   const [showRules, setShowRules] = useState(false)
   const [timeUntilNext, setTimeUntilNext] = useState(getTimeUntilMidnight())
   const [streak, setStreak] = useState(0)
@@ -6944,7 +6971,7 @@ export default function Outlier() {
     return () => clearInterval(interval)
   }, [])
 
-  const handleSelect = (index) => {
+  const handleSelect = (index: number) => {
     if (gameState !== 'playing' || showingAnswer || alreadyPlayed) return
     setSelectedIndex(index)
   }
