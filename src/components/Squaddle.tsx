@@ -16,7 +16,6 @@ import {
   markOnboardingSeen,
 } from '@/lib/game-utils'
 import { players as allPlayers } from '@/data/players'
-import { ThemeToggle } from './ThemeToggle'
 
 function OnboardingModal({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState(0)
@@ -310,8 +309,7 @@ export default function Squaddle() {
       <div className="max-w-xl mx-auto p-6">
         {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
 
-        <div className="flex items-center justify-between mb-2">
-          <ThemeToggle />
+        <div className="flex items-center justify-center gap-4 mb-2">
           <h1 className="text-3xl font-bold">Squaddle</h1>
           <HelpButton onClick={() => setShowOnboarding(true)} />
         </div>
@@ -384,8 +382,7 @@ export default function Squaddle() {
       <div className="max-w-xl mx-auto p-6">
         {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
 
-        <div className="flex items-center justify-between mb-2">
-          <ThemeToggle />
+        <div className="flex items-center justify-center gap-4 mb-2">
           <h1 className="text-3xl font-bold">Squaddle</h1>
           <HelpButton onClick={() => setShowOnboarding(true)} />
         </div>
@@ -437,8 +434,7 @@ export default function Squaddle() {
     <div className="max-w-xl mx-auto p-6">
       {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
 
-      <div className="flex items-center justify-between mb-2">
-        <ThemeToggle />
+      <div className="flex items-center justify-center gap-4 mb-2">
         <h1 className="text-3xl font-bold">Squaddle</h1>
         <HelpButton onClick={() => setShowOnboarding(true)} />
       </div>
