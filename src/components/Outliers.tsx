@@ -6945,6 +6945,7 @@ export default function Outlier() {
   const [bestStreak, setBestStreak] = useState(0)
   const [alreadyPlayed, setAlreadyPlayed] = useState(false)
   const [showingAnswer, setShowingAnswer] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     const p = generatePuzzle()
@@ -7051,6 +7052,8 @@ export default function Outlier() {
 
   const copyShare = () => {
     navigator.clipboard.writeText(generateShareText())
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   if (!puzzle) return null
@@ -7392,14 +7395,17 @@ export default function Outlier() {
               fontSize: '14px',
               fontWeight: '600',
               letterSpacing: '2px',
-              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              background: copied
+                ? 'linear-gradient(135deg, #22c55e, #16a34a)'
+                : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
               border: 'none',
               borderRadius: '12px',
               color: '#fff',
               cursor: 'pointer',
+              transition: 'background 0.2s ease',
             }}
           >
-            SHARE
+            {copied ? 'COPIED!' : 'SHARE'}
           </button>
 
           {/* Stats */}
