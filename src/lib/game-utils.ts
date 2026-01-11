@@ -63,7 +63,7 @@ export function calculateRoundScore(
 ): number {
   if (!won) return 0
 
-  const cluePenalty = CLUE_COSTS.slice(0, revealedClues).reduce<number>((a, b) => a + b, 0)
+  const cluePenalty = CLUE_COSTS[revealedClues - 1]
   const guessPenalty = wrongGuesses * WRONG_GUESS_PENALTY
 
   return Math.max(0, MAX_SCORE_PER_ROUND - cluePenalty - guessPenalty)
