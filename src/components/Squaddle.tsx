@@ -16,6 +16,7 @@ import {
   markOnboardingSeen,
 } from '@/lib/game-utils'
 import { players as allPlayers } from '@/data/players'
+import { ThemeToggle } from './ThemeToggle'
 
 function OnboardingModal({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState(0)
@@ -310,13 +311,13 @@ export default function Squaddle() {
         {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
 
         <div className="flex items-center justify-between mb-2">
-          <div />
+          <ThemeToggle />
           <h1 className="text-3xl font-bold">Squaddle</h1>
           <HelpButton onClick={() => setShowOnboarding(true)} />
         </div>
-        <p className="text-gray-400 text-center mb-8">{gameState.date}</p>
+        <p className="text-gray-400 dark:text-gray-400 text-center mb-8">{gameState.date}</p>
 
-        <div className="text-center mb-8 p-6 rounded-2xl bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-700">
+        <div className="text-center mb-8 p-6 rounded-2xl bg-gradient-to-b from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 border border-gray-300 dark:border-gray-700">
           <p className="text-gray-400 text-sm uppercase tracking-wide mb-2">Game Complete!</p>
           <div className="text-5xl mb-4">
             {'⭐'.repeat(stars)}
@@ -384,11 +385,13 @@ export default function Squaddle() {
         {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
 
         <div className="flex items-center justify-between mb-2">
-          <div />
+          <ThemeToggle />
           <h1 className="text-3xl font-bold">Squaddle</h1>
           <HelpButton onClick={() => setShowOnboarding(true)} />
         </div>
-        <p className="text-gray-400 text-center mb-8">Round {gameState.currentRound + 1} of 3</p>
+        <p className="text-gray-400 dark:text-gray-400 text-center mb-8">
+          Round {gameState.currentRound + 1} of 3
+        </p>
 
         <div
           className={`text-center mb-8 p-8 rounded-2xl border ${
@@ -435,7 +438,7 @@ export default function Squaddle() {
       {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
 
       <div className="flex items-center justify-between mb-2">
-        <div />
+        <ThemeToggle />
         <h1 className="text-3xl font-bold">Squaddle</h1>
         <HelpButton onClick={() => setShowOnboarding(true)} />
       </div>
