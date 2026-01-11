@@ -7045,15 +7045,20 @@ export default function Outlier() {
       text += '😅 Tough day'
     }
 
-    text += '\n\nhttps://outlier-game.vercel.app/'
+    text += '\n\nPlay at: ntdil.games/outliers'
 
     return text
   }
 
-  const copyShare = () => {
-    navigator.clipboard.writeText(generateShareText())
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  const copyShare = async () => {
+    const text = generateShareText()
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      alert(text)
+    }
   }
 
   if (!puzzle) return null
@@ -7391,21 +7396,33 @@ export default function Outlier() {
           <button
             onClick={copyShare}
             style={{
-              padding: '14px 32px',
-              fontSize: '14px',
+              width: '100%',
+              padding: '16px',
+              fontSize: '18px',
               fontWeight: '600',
-              letterSpacing: '2px',
-              background: copied
-                ? 'linear-gradient(135deg, #22c55e, #16a34a)'
-                : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              background: '#2563eb',
               border: 'none',
               borderRadius: '12px',
               color: '#fff',
               cursor: 'pointer',
               transition: 'background 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
             }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = '#1d4ed8')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = '#2563eb')}
           >
-            {copied ? 'COPIED!' : 'SHARE'}
+            {copied ? (
+              <>
+                <span>✓</span> Copied to Clipboard!
+              </>
+            ) : (
+              <>
+                <span>📤</span> Share Results
+              </>
+            )}
           </button>
 
           {/* Stats */}

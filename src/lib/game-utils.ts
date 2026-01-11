@@ -112,7 +112,7 @@ Score: ${gameState.totalScore}/300
 
 ${roundEmojis.join(' ')}
 
-Play at: ntdil.games`
+Play at: ntdil.games/squaddle`
 }
 
 // Local storage helpers

@@ -308,6 +308,6 @@ describe('generateShareText', () => {
   it('includes play link', () => {
     const state = initializeGameState('2024-01-15')
     const text = generateShareText(state)
-    expect(text).toContain('ntdil.games')
+    expect(text).toContain('ntdil.games/squaddle')
   })
 })
