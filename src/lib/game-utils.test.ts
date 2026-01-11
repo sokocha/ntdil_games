@@ -158,9 +158,12 @@ describe('calculateRoundScore', () => {
   })
 
   it('deducts points for revealed clues', () => {
-    // CLUE_COSTS = [0, 20, 40, 60, 80, 90]
-    expect(calculateRoundScore(2, 0, true)).toBe(80) // 100 - 0 - 20 = 80
-    expect(calculateRoundScore(3, 0, true)).toBe(40) // 100 - 0 - 20 - 40 = 40
+    // CLUE_COSTS = [0, 20, 40, 60, 80, 90] - cumulative penalty at each clue level
+    expect(calculateRoundScore(2, 0, true)).toBe(80) // 100 - 20 = 80
+    expect(calculateRoundScore(3, 0, true)).toBe(60) // 100 - 40 = 60
+    expect(calculateRoundScore(4, 0, true)).toBe(40) // 100 - 60 = 40
+    expect(calculateRoundScore(5, 0, true)).toBe(20) // 100 - 80 = 20
+    expect(calculateRoundScore(6, 0, true)).toBe(10) // 100 - 90 = 10
   })
 
   it('deducts 10 points per wrong guess', () => {
