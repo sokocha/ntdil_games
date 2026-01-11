@@ -9,11 +9,11 @@ const games = [
     available: true,
   },
   {
-    id: 'coming-soon-1',
-    name: 'Coming Soon',
-    description: 'More games on the way',
-    emoji: '🎮',
-    available: false,
+    id: 'outliers',
+    name: 'Outliers',
+    description: 'Find the word that does not belong',
+    emoji: '🔍',
+    available: true,
   },
 ]
 
