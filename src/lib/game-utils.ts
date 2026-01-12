@@ -124,7 +124,7 @@ export function initializeGameState(dateStr: string): GameState {
 }
 
 // Generate share text
-export function generateShareText(gameState: GameState, dayNum: number): string {
+export function generateShareText(gameState: GameState, dayNum: number, baseUrl: string): string {
   const stars = getStarRating(gameState.totalScore)
   const starEmoji = '⭐'.repeat(stars) + '☆'.repeat(5 - stars)
 
@@ -141,7 +141,7 @@ Score: ${gameState.totalScore}/300
 
 ${roundEmojis.join(' ')}
 
-Play at: ntdil.games/squaddle`
+Play at: ${baseUrl}/squaddle`
 }
 
 // Local storage helpers

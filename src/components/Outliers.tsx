@@ -7045,7 +7045,8 @@ export default function Outlier() {
       text += '😅 Tough day'
     }
 
-    text += '\n\nPlay at: ntdil.games/outliers'
+    const baseUrl = window.location.origin
+    text += `\n\nPlay at: ${baseUrl}/outliers`
 
     return text
   }
