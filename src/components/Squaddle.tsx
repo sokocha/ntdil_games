@@ -314,7 +314,8 @@ export default function Squaddle() {
   const handleShare = useCallback(async () => {
     if (!gameState) return
 
-    const text = generateShareText(gameState, dayNum)
+    const baseUrl = window.location.origin
+    const text = generateShareText(gameState, dayNum, baseUrl)
 
     try {
       await navigator.clipboard.writeText(text)
