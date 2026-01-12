@@ -251,38 +251,38 @@ describe('initializeGameState', () => {
 })
 
 describe('generateShareText', () => {
-  it('includes the game date', () => {
+  it('includes the puzzle number', () => {
     const state = initializeGameState('2024-01-15')
     state.totalScore = 100
-    const text = generateShareText(state)
-    expect(text).toContain('2024-01-15')
+    const text = generateShareText(state, 42)
+    expect(text).toContain('SQUADDLE #42')
   })
 
   it('includes the score', () => {
     const state = initializeGameState('2024-01-15')
     state.totalScore = 250
-    const text = generateShareText(state)
+    const text = generateShareText(state, 1)
     expect(text).toContain('250/300')
   })
 
   it('includes correct star rating', () => {
     const state = initializeGameState('2024-01-15')
     state.totalScore = 280 // 5 stars
-    const text = generateShareText(state)
+    const text = generateShareText(state, 1)
     expect(text).toContain('⭐⭐⭐⭐⭐')
   })
 
   it('shows green emoji for perfect round', () => {
     const state = initializeGameState('2024-01-15')
     state.rounds[0] = { ...state.rounds[0], won: true, revealedClues: 1, guesses: ['correct'] }
-    const text = generateShareText(state)
+    const text = generateShareText(state, 1)
     expect(text).toContain('🟢')
   })
 
   it('shows red X for lost round', () => {
     const state = initializeGameState('2024-01-15')
     state.rounds[0] = { ...state.rounds[0], won: false }
-    const text = generateShareText(state)
+    const text = generateShareText(state, 1)
     expect(text).toContain('❌')
   })
 
@@ -294,20 +294,20 @@ describe('generateShareText', () => {
       revealedClues: 2,
       guesses: ['wrong', 'correct'],
     }
-    const text = generateShareText(state)
+    const text = generateShareText(state, 1)
     expect(text).toContain('🟡')
   })
 
   it('shows orange emoji for round with 4+ clues', () => {
     const state = initializeGameState('2024-01-15')
     state.rounds[0] = { ...state.rounds[0], won: true, revealedClues: 4, guesses: ['correct'] }
-    const text = generateShareText(state)
+    const text = generateShareText(state, 1)
     expect(text).toContain('🟠')
   })
 
   it('includes play link', () => {
     const state = initializeGameState('2024-01-15')
-    const text = generateShareText(state)
+    const text = generateShareText(state, 1)
     expect(text).toContain('ntdil.games/squaddle')
   })
 })
