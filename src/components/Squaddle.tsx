@@ -14,6 +14,11 @@ import {
   loadGameState,
   hasSeenOnboarding,
   markOnboardingSeen,
+  getDayNumber,
+  getTimeUntilMidnight,
+  formatCountdown,
+  loadStreakData,
+  saveStreakData,
 } from '@/lib/game-utils'
 import { players as allPlayers } from '@/data/players'
 
@@ -136,12 +141,22 @@ export default function Squaddle() {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [dayNum, setDayNum] = useState(1)
+  const [streak, setStreak] = useState(0)
+  const [bestStreak, setBestStreak] = useState(0)
+  const [timeUntilNext, setTimeUntilNext] = useState(0)
 
   // Initialize game on mount
   useEffect(() => {
     const today = getTodayString()
     const players = getDailyPlayers(allPlayers, today)
     setDailyPlayers(players)
+    setDayNum(getDayNumber())
+
+    // Load streak data
+    const streakData = loadStreakData()
+    setStreak(streakData.streak)
+    setBestStreak(streakData.bestStreak)
 
     const saved = loadGameState()
     if (saved) {
@@ -156,12 +171,47 @@ export default function Squaddle() {
     }
   }, [])
 
+  // Countdown timer
+  useEffect(() => {
+    setTimeUntilNext(getTimeUntilMidnight())
+    const interval = setInterval(() => {
+      setTimeUntilNext(getTimeUntilMidnight())
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [])
+
   // Save game state on changes
   useEffect(() => {
     if (gameState) {
       saveGameState(gameState)
     }
   }, [gameState])
+
+  // Update streak when game completes
+  useEffect(() => {
+    if (!gameState?.gameComplete) return
+
+    const streakData = loadStreakData()
+    const allRoundsWon = gameState.rounds.every((r) => r.won)
+    const wasPlayedYesterday = streakData.lastPlayedDay === dayNum - 1
+
+    let newStreak = streak
+    if (allRoundsWon) {
+      newStreak = wasPlayedYesterday || streakData.lastPlayedDay === 0 ? streak + 1 : 1
+    } else {
+      newStreak = 0
+    }
+
+    const newBestStreak = Math.max(bestStreak, newStreak)
+    setStreak(newStreak)
+    setBestStreak(newBestStreak)
+
+    saveStreakData({
+      lastPlayedDay: dayNum,
+      streak: newStreak,
+      bestStreak: newBestStreak,
+    })
+  }, [gameState?.gameComplete, gameState?.rounds, dayNum, streak, bestStreak])
 
   const currentRound = gameState?.rounds[gameState.currentRound]
   const currentPlayer = dailyPlayers[gameState?.currentRound ?? 0]
@@ -264,7 +314,7 @@ export default function Squaddle() {
   const handleShare = useCallback(async () => {
     if (!gameState) return
 
-    const text = generateShareText(gameState)
+    const text = generateShareText(gameState, dayNum)
 
     try {
       await navigator.clipboard.writeText(text)
@@ -273,7 +323,7 @@ export default function Squaddle() {
     } catch {
       alert(text)
     }
-  }, [gameState])
+  }, [gameState, dayNum])
 
   const handleNextRound = useCallback(() => {
     if (!gameState || gameState.currentRound >= 2) return
@@ -309,11 +359,11 @@ export default function Squaddle() {
       <div className="max-w-xl mx-auto p-6">
         {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
 
-        <div className="flex items-center justify-center gap-4 mb-2">
-          <h1 className="text-3xl font-bold">Squaddle</h1>
-          <HelpButton onClick={() => setShowOnboarding(true)} />
+        <div className="text-center mb-6">
+          <h1 className="text-4xl font-bold tracking-widest">SQUADDLE</h1>
+          <p className="text-gray-500 mt-1">#{dayNum}</p>
         </div>
-        <p className="text-gray-400 dark:text-gray-400 text-center mb-8">{gameState.date}</p>
+        <HelpButton onClick={() => setShowOnboarding(true)} />
 
         <div className="text-center mb-8 p-6 rounded-2xl bg-gradient-to-b from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 border border-gray-300 dark:border-gray-700">
           <p className="text-gray-400 text-sm uppercase tracking-wide mb-2">Game Complete!</p>
@@ -369,9 +419,25 @@ export default function Squaddle() {
           )}
         </button>
 
-        <p className="text-center text-gray-500 text-sm mt-4">
-          Come back tomorrow for new players!
-        </p>
+        {/* Stats */}
+        <div className="flex justify-center gap-4 mt-6">
+          <div className="text-center px-5 py-3 rounded-xl bg-gray-800/50 border border-gray-700">
+            <div className="text-2xl font-bold text-purple-400">{streak}</div>
+            <div className="text-xs text-gray-500 uppercase tracking-wide">Streak</div>
+          </div>
+          <div className="text-center px-5 py-3 rounded-xl bg-gray-800/50 border border-gray-700">
+            <div className="text-2xl font-bold text-purple-400">{bestStreak}</div>
+            <div className="text-xs text-gray-500 uppercase tracking-wide">Best</div>
+          </div>
+        </div>
+
+        {/* Countdown */}
+        <div className="text-center mt-6">
+          <p className="text-xs text-gray-500 mb-1">Next puzzle in</p>
+          <p className="text-2xl font-light font-mono text-white">
+            {formatCountdown(timeUntilNext)}
+          </p>
+        </div>
       </div>
     )
   }
@@ -382,10 +448,11 @@ export default function Squaddle() {
       <div className="max-w-xl mx-auto p-6">
         {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
 
-        <div className="flex items-center justify-center gap-4 mb-2">
-          <h1 className="text-3xl font-bold">Squaddle</h1>
-          <HelpButton onClick={() => setShowOnboarding(true)} />
+        <div className="text-center mb-6">
+          <h1 className="text-4xl font-bold tracking-widest">SQUADDLE</h1>
+          <p className="text-gray-500 mt-1">#{dayNum}</p>
         </div>
+        <HelpButton onClick={() => setShowOnboarding(true)} />
         <p className="text-gray-400 dark:text-gray-400 text-center mb-8">
           Round {gameState.currentRound + 1} of 3
         </p>
@@ -434,10 +501,11 @@ export default function Squaddle() {
     <div className="max-w-xl mx-auto p-6">
       {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
 
-      <div className="flex items-center justify-center gap-4 mb-2">
-        <h1 className="text-3xl font-bold">Squaddle</h1>
-        <HelpButton onClick={() => setShowOnboarding(true)} />
+      <div className="text-center mb-2">
+        <h1 className="text-4xl font-bold tracking-widest">SQUADDLE</h1>
+        <p className="text-gray-500 mt-1">#{dayNum}</p>
       </div>
+      <HelpButton onClick={() => setShowOnboarding(true)} />
 
       {/* Round indicator */}
       <div className="flex justify-center gap-2 mb-6">

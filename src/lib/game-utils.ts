@@ -8,10 +8,39 @@ function seededRandom(seed: number): () => number {
   }
 }
 
-// Get today's date string in YYYY-MM-DD format
+// Get today's date string in YYYY-MM-DD format (local time)
 export function getTodayString(): string {
   const now = new Date()
-  return now.toISOString().split('T')[0]
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+// Squaddle launch date - used for puzzle numbering
+const SQUADDLE_START_DATE = '2026-01-09'
+
+// Get day number since launch (1-indexed)
+export function getDayNumber(): number {
+  const start = new Date(SQUADDLE_START_DATE).setHours(0, 0, 0, 0)
+  const now = new Date().setHours(0, 0, 0, 0)
+  return Math.floor((now - start) / (1000 * 60 * 60 * 24)) + 1
+}
+
+// Get milliseconds until midnight local time
+export function getTimeUntilMidnight(): number {
+  const now = new Date()
+  const midnight = new Date()
+  midnight.setHours(24, 0, 0, 0)
+  return midnight.getTime() - now.getTime()
+}
+
+// Format milliseconds as HH:MM:SS
+export function formatCountdown(ms: number): string {
+  const hours = Math.floor(ms / (1000 * 60 * 60))
+  const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60))
+  const seconds = Math.floor((ms % (1000 * 60)) / 1000)
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
 }
 
 // Convert date string to numeric seed
@@ -95,7 +124,7 @@ export function initializeGameState(dateStr: string): GameState {
 }
 
 // Generate share text
-export function generateShareText(gameState: GameState): string {
+export function generateShareText(gameState: GameState, dayNum: number): string {
   const stars = getStarRating(gameState.totalScore)
   const starEmoji = '⭐'.repeat(stars) + '☆'.repeat(5 - stars)
 
@@ -106,7 +135,7 @@ export function generateShareText(gameState: GameState): string {
     return '🟠'
   })
 
-  return `Squaddle ${gameState.date}
+  return `SQUADDLE #${dayNum}
 ${starEmoji}
 Score: ${gameState.totalScore}/300
 
@@ -151,5 +180,33 @@ export function hasSeenOnboarding(): boolean {
 export function markOnboardingSeen(): void {
   if (typeof window !== 'undefined') {
     localStorage.setItem(ONBOARDING_KEY, 'true')
+  }
+}
+
+// Streak storage
+const STREAK_KEY = 'squaddle-streak'
+
+export interface StreakData {
+  lastPlayedDay: number
+  streak: number
+  bestStreak: number
+}
+
+export function loadStreakData(): StreakData {
+  if (typeof window === 'undefined') return { lastPlayedDay: 0, streak: 0, bestStreak: 0 }
+
+  const saved = localStorage.getItem(STREAK_KEY)
+  if (!saved) return { lastPlayedDay: 0, streak: 0, bestStreak: 0 }
+
+  try {
+    return JSON.parse(saved) as StreakData
+  } catch {
+    return { lastPlayedDay: 0, streak: 0, bestStreak: 0 }
+  }
+}
+
+export function saveStreakData(data: StreakData): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(STREAK_KEY, JSON.stringify(data))
   }
 }
