@@ -62,35 +62,66 @@ export async function GET(request: NextRequest) {
       const seed = dateToSeed(dateStr)
       const random = seededRandom(seed)
 
-      // Get Squaddle players for this day
-      const easy = allPlayers.filter((p) => p.difficulty === 'easy')
-      const medium = allPlayers.filter((p) => p.difficulty === 'medium')
-      const hard = allPlayers.filter((p) => p.difficulty === 'hard')
+      // Get Squaddle players for this day (prioritize scheduled, then random)
+      const scheduledEasyPlayer = allPlayers.find(
+        (p) => p.difficulty === 'easy' && p.scheduledDate === dateStr
+      )
+      const scheduledMediumPlayer = allPlayers.find(
+        (p) => p.difficulty === 'medium' && p.scheduledDate === dateStr
+      )
+      const scheduledHardPlayer = allPlayers.find(
+        (p) => p.difficulty === 'hard' && p.scheduledDate === dateStr
+      )
 
-      const shuffledEasy = shuffleWithSeed(easy, random)
-      const shuffledMedium = shuffleWithSeed(medium, random)
-      const shuffledHard = shuffleWithSeed(hard, random)
+      // Fallback to random selection for unscheduled slots
+      const unscheduledEasy = allPlayers.filter((p) => p.difficulty === 'easy' && !p.scheduledDate)
+      const unscheduledMedium = allPlayers.filter(
+        (p) => p.difficulty === 'medium' && !p.scheduledDate
+      )
+      const unscheduledHard = allPlayers.filter((p) => p.difficulty === 'hard' && !p.scheduledDate)
+
+      const shuffledEasy = shuffleWithSeed(unscheduledEasy, random)
+      const shuffledMedium = shuffleWithSeed(unscheduledMedium, random)
+      const shuffledHard = shuffleWithSeed(unscheduledHard, random)
 
       const squaddlePlayers = [
-        shuffledEasy[0] || null,
-        shuffledMedium[0] || null,
-        shuffledHard[0] || null,
+        scheduledEasyPlayer || shuffledEasy[0] || null,
+        scheduledMediumPlayer || shuffledMedium[0] || null,
+        scheduledHardPlayer || shuffledHard[0] || null,
       ]
 
-      // Get Outliers categories for this day (one per difficulty)
+      // Get Outliers categories for this day (prioritize scheduled, then random)
       const outliersRandom = seededRandom(seed + 1000)
-      const easyCategories = allCategories.filter((c) => c.difficulty === 1)
-      const mediumCategories = allCategories.filter((c) => c.difficulty === 2)
-      const hardCategories = allCategories.filter((c) => c.difficulty === 3)
 
-      const shuffledEasyCategories = shuffleWithSeed(easyCategories, outliersRandom)
-      const shuffledMediumCategories = shuffleWithSeed(mediumCategories, outliersRandom)
-      const shuffledHardCategories = shuffleWithSeed(hardCategories, outliersRandom)
+      const scheduledEasyCategory = allCategories.find(
+        (c) => c.difficulty === 1 && c.scheduledDate === dateStr
+      )
+      const scheduledMediumCategory = allCategories.find(
+        (c) => c.difficulty === 2 && c.scheduledDate === dateStr
+      )
+      const scheduledHardCategory = allCategories.find(
+        (c) => c.difficulty === 3 && c.scheduledDate === dateStr
+      )
+
+      // Fallback to random selection for unscheduled slots
+      const unscheduledEasyCategories = allCategories.filter(
+        (c) => c.difficulty === 1 && !c.scheduledDate
+      )
+      const unscheduledMediumCategories = allCategories.filter(
+        (c) => c.difficulty === 2 && !c.scheduledDate
+      )
+      const unscheduledHardCategories = allCategories.filter(
+        (c) => c.difficulty === 3 && !c.scheduledDate
+      )
+
+      const shuffledEasyCategories = shuffleWithSeed(unscheduledEasyCategories, outliersRandom)
+      const shuffledMediumCategories = shuffleWithSeed(unscheduledMediumCategories, outliersRandom)
+      const shuffledHardCategories = shuffleWithSeed(unscheduledHardCategories, outliersRandom)
 
       const outliersCategories = [
-        shuffledEasyCategories[0] || null,
-        shuffledMediumCategories[0] || null,
-        shuffledHardCategories[0] || null,
+        scheduledEasyCategory || shuffledEasyCategories[0] || null,
+        scheduledMediumCategory || shuffledMediumCategories[0] || null,
+        scheduledHardCategory || shuffledHardCategories[0] || null,
       ]
 
       schedule.push({

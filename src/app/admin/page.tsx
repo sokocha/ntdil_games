@@ -80,6 +80,15 @@ export default function AdminPage() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [showCategoryForm, setShowCategoryForm] = useState(false)
 
+  // Upload state
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  const [uploadData, setUploadData] = useState<{
+    type: 'squaddle' | 'outliers'
+    days: unknown[]
+  } | null>(null)
+  const [uploadStartDate, setUploadStartDate] = useState(getLocalTodayString())
+  const [uploadError, setUploadError] = useState('')
+
   const [loading, setLoading] = useState(false)
 
   const handleLogin = (e: React.FormEvent) => {
@@ -265,6 +274,83 @@ export default function AdminPage() {
     setLoading(false)
   }
 
+  const handleFileSelect = (e: React.ChangeEvent<globalThis.HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadError('')
+    const reader = new window.FileReader()
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target?.result as string)
+        if (!json.type || !json.days || !Array.isArray(json.days)) {
+          setUploadError('Invalid format. Expected { type: "squaddle" | "outliers", days: [...] }')
+          setUploadData(null)
+          return
+        }
+        if (json.days.length > 90) {
+          setUploadError('Maximum 90 days (3 months) allowed')
+          setUploadData(null)
+          return
+        }
+        setUploadData(json)
+      } catch {
+        setUploadError('Invalid JSON file')
+        setUploadData(null)
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  const handleUploadSubmit = async () => {
+    if (!uploadData) return
+
+    setLoading(true)
+    setUploadError('')
+    try {
+      const res = await fetch('/api/admin/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          data: uploadData,
+          startDate: uploadStartDate,
+        }),
+      })
+      if (res.ok) {
+        const result = await res.json()
+        alert(
+          `Uploaded ${result.days} days of ${uploadData.type} data\n` +
+            `From: ${result.startDate}\nTo: ${result.endDate}`
+        )
+        setShowUploadModal(false)
+        setUploadData(null)
+        fetchPlayers()
+        fetchCategories()
+        fetchSchedule()
+      } else {
+        const data = await res.json()
+        setUploadError(data.error || 'Failed to upload')
+      }
+    } catch {
+      setUploadError('Failed to upload')
+    }
+    setLoading(false)
+  }
+
+  const getEndDate = (startDate: string, days: number): string => {
+    const date = new Date(startDate + 'T00:00:00')
+    date.setDate(date.getDate() + days - 1)
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 p-4">
@@ -307,9 +393,94 @@ export default function AdminPage() {
             onClick={seedDatabase}
             className="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg text-white"
           >
-            Seed Data
+            Seed Test Data
+          </button>
+          <button
+            onClick={() => setShowUploadModal(true)}
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white"
+          >
+            Upload Game Data
           </button>
         </div>
+
+        {/* Upload Modal */}
+        {showUploadModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-800 rounded-xl max-w-lg w-full p-6">
+              <h2 className="text-xl font-bold text-white mb-4">Upload Game Data</h2>
+
+              {uploadError && <p className="text-red-400 mb-4 text-sm">{uploadError}</p>}
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2">
+                    Select JSON file (Squaddle or Outliers)
+                  </label>
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={handleFileSelect}
+                    className="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600"
+                  />
+                </div>
+
+                {uploadData && (
+                  <>
+                    <div className="bg-gray-700 p-3 rounded-lg">
+                      <p className="text-white">
+                        <span className="text-gray-400">Type:</span>{' '}
+                        <span className="font-semibold capitalize">{uploadData.type}</span>
+                      </p>
+                      <p className="text-white">
+                        <span className="text-gray-400">Days:</span>{' '}
+                        <span className="font-semibold">{uploadData.days.length}</span>
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-400 text-sm mb-2">Start Date</label>
+                      <input
+                        type="date"
+                        value={uploadStartDate}
+                        onChange={(e) => setUploadStartDate(e.target.value)}
+                        className="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600"
+                      />
+                    </div>
+
+                    <div className="bg-gray-700 p-3 rounded-lg">
+                      <p className="text-white">
+                        <span className="text-gray-400">End Date:</span>{' '}
+                        <span className="font-semibold">
+                          {getEndDate(uploadStartDate, uploadData.days.length)}
+                        </span>
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={handleUploadSubmit}
+                    disabled={!uploadData || loading}
+                    className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 rounded-lg font-semibold text-white"
+                  >
+                    {loading ? 'Uploading...' : 'Upload'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowUploadModal(false)
+                      setUploadData(null)
+                      setUploadError('')
+                    }}
+                    className="flex-1 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg font-semibold text-white"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-900/50 border border-red-700 text-red-200 p-4 rounded-lg mb-6">
