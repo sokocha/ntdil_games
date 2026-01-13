@@ -19,6 +19,9 @@ import {
   formatCountdown,
   loadStreakData,
   saveStreakData,
+  addScoreToHistory,
+  getAverageScore,
+  getGamesPlayed,
 } from '@/lib/game-utils'
 import { players as allPlayers } from '@/data/players'
 
@@ -145,6 +148,8 @@ export default function Squaddle() {
   const [streak, setStreak] = useState(0)
   const [bestStreak, setBestStreak] = useState(0)
   const [timeUntilNext, setTimeUntilNext] = useState(0)
+  const [averageScore, setAverageScore] = useState(0)
+  const [gamesPlayed, setGamesPlayed] = useState(0)
 
   // Initialize game on mount
   useEffect(() => {
@@ -157,6 +162,10 @@ export default function Squaddle() {
     const streakData = loadStreakData()
     setStreak(streakData.streak)
     setBestStreak(streakData.bestStreak)
+
+    // Load score history data
+    setAverageScore(getAverageScore())
+    setGamesPlayed(getGamesPlayed())
 
     const saved = loadGameState()
     if (saved) {
@@ -187,7 +196,7 @@ export default function Squaddle() {
     }
   }, [gameState])
 
-  // Update streak when game completes
+  // Update streak and save score when game completes
   useEffect(() => {
     if (!gameState?.gameComplete) return
 
@@ -211,7 +220,20 @@ export default function Squaddle() {
       streak: newStreak,
       bestStreak: newBestStreak,
     })
-  }, [gameState?.gameComplete, gameState?.rounds, dayNum, streak, bestStreak])
+
+    // Save score to history and update average
+    addScoreToHistory(dayNum, gameState.totalScore, gameState.date)
+    setAverageScore(getAverageScore())
+    setGamesPlayed(getGamesPlayed())
+  }, [
+    gameState?.gameComplete,
+    gameState?.rounds,
+    gameState?.totalScore,
+    gameState?.date,
+    dayNum,
+    streak,
+    bestStreak,
+  ])
 
   const currentRound = gameState?.rounds[gameState.currentRound]
   const currentPlayer = dailyPlayers[gameState?.currentRound ?? 0]
@@ -421,14 +443,22 @@ export default function Squaddle() {
         </button>
 
         {/* Stats */}
-        <div className="flex justify-center gap-4 mt-6">
-          <div className="text-center px-5 py-3 rounded-xl bg-gray-800/50 border border-gray-700">
+        <div className="flex justify-center gap-3 mt-6 flex-wrap">
+          <div className="text-center px-4 py-3 rounded-xl bg-gray-800/50 border border-gray-700">
             <div className="text-2xl font-bold text-purple-400">{streak}</div>
             <div className="text-xs text-gray-500 uppercase tracking-wide">Streak</div>
           </div>
-          <div className="text-center px-5 py-3 rounded-xl bg-gray-800/50 border border-gray-700">
+          <div className="text-center px-4 py-3 rounded-xl bg-gray-800/50 border border-gray-700">
             <div className="text-2xl font-bold text-purple-400">{bestStreak}</div>
             <div className="text-xs text-gray-500 uppercase tracking-wide">Best</div>
+          </div>
+          <div className="text-center px-4 py-3 rounded-xl bg-gray-800/50 border border-gray-700">
+            <div className="text-2xl font-bold text-blue-400">{averageScore}</div>
+            <div className="text-xs text-gray-500 uppercase tracking-wide">Avg Score</div>
+          </div>
+          <div className="text-center px-4 py-3 rounded-xl bg-gray-800/50 border border-gray-700">
+            <div className="text-2xl font-bold text-green-400">{gamesPlayed}</div>
+            <div className="text-xs text-gray-500 uppercase tracking-wide">Played</div>
           </div>
         </div>
 

@@ -210,3 +210,52 @@ export function saveStreakData(data: StreakData): void {
     localStorage.setItem(STREAK_KEY, JSON.stringify(data))
   }
 }
+
+// Score history storage for average calculation
+const SCORE_HISTORY_KEY = 'squaddle-score-history'
+
+export interface ScoreHistoryData {
+  scores: { dayNum: number; score: number; date: string }[]
+}
+
+export function loadScoreHistory(): ScoreHistoryData {
+  if (typeof window === 'undefined') return { scores: [] }
+
+  const saved = localStorage.getItem(SCORE_HISTORY_KEY)
+  if (!saved) return { scores: [] }
+
+  try {
+    return JSON.parse(saved) as ScoreHistoryData
+  } catch {
+    return { scores: [] }
+  }
+}
+
+export function saveScoreHistory(data: ScoreHistoryData): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(SCORE_HISTORY_KEY, JSON.stringify(data))
+  }
+}
+
+export function addScoreToHistory(dayNum: number, score: number, date: string): void {
+  const history = loadScoreHistory()
+
+  // Don't add duplicate entries for the same day
+  if (history.scores.some((s) => s.dayNum === dayNum)) return
+
+  history.scores.push({ dayNum, score, date })
+  saveScoreHistory(history)
+}
+
+export function getAverageScore(): number {
+  const history = loadScoreHistory()
+  if (history.scores.length === 0) return 0
+
+  const total = history.scores.reduce((sum, s) => sum + s.score, 0)
+  return Math.round(total / history.scores.length)
+}
+
+export function getGamesPlayed(): number {
+  const history = loadScoreHistory()
+  return history.scores.length
+}
