@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { Player, GameState, CLUE_ORDER, CLUE_LABELS, CLUE_COSTS } from '@/lib/types'
 import {
   getTodayString,
-  getDailyPlayers,
   checkGuess,
   calculateRoundScore,
   getStarRating,
@@ -23,7 +22,6 @@ import {
   getAverageScore,
   getGamesPlayed,
 } from '@/lib/game-utils'
-import { players as allPlayers } from '@/data/players'
 
 function OnboardingModal({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState(0)
@@ -154,9 +152,23 @@ export default function Squaddle() {
   // Initialize game on mount
   useEffect(() => {
     const today = getTodayString()
-    const players = getDailyPlayers(allPlayers, today)
-    setDailyPlayers(players)
     setDayNum(getDayNumber())
+
+    // Fetch players from API with client's local date
+    const fetchPlayers = async () => {
+      try {
+        const res = await fetch(`/api/games/squaddle?date=${today}`)
+        if (res.ok) {
+          const players = await res.json()
+          setDailyPlayers(players)
+        } else {
+          console.error('Failed to fetch players from API')
+        }
+      } catch (error) {
+        console.error('Error fetching players:', error)
+      }
+    }
+    fetchPlayers()
 
     // Load streak data
     const streakData = loadStreakData()
