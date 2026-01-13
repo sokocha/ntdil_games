@@ -249,27 +249,37 @@ export default function AdminPage() {
     setLoading(false)
   }
 
-  const seedDatabase = async () => {
-    if (!window.confirm('This will replace ALL existing data with sample data. Are you sure?'))
+  // Bulk delete state
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false)
+  const [bulkDeleteType, setBulkDeleteType] = useState<'squaddle' | 'outliers'>('squaddle')
+
+  const bulkDeleteData = async () => {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ALL ${bulkDeleteType === 'squaddle' ? 'Squaddle players' : 'Outliers categories'}? This cannot be undone.`
+      )
+    )
       return
+
     setLoading(true)
     try {
-      const res = await fetch('/api/admin/seed', {
-        method: 'POST',
+      const res = await fetch(`/api/admin/bulk-delete?type=${bulkDeleteType}`, {
+        method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       })
       if (res.ok) {
         const data = await res.json()
-        alert(`Seeded ${data.players} players and ${data.categories} categories`)
+        alert(`Deleted ${data.deletedCount} ${bulkDeleteType === 'squaddle' ? 'players' : 'categories'}`)
+        setShowBulkDeleteModal(false)
         fetchPlayers()
         fetchCategories()
         fetchSchedule()
       } else {
         const data = await res.json()
-        setError(data.error || 'Failed to seed database')
+        setError(data.error || 'Failed to delete data')
       }
     } catch {
-      setError('Failed to seed database')
+      setError('Failed to delete data')
     }
     setLoading(false)
   }
@@ -380,27 +390,29 @@ export default function AdminPage() {
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-white">Game Admin</h1>
-          <button
-            onClick={() => {
-              setIsAuthenticated(false)
-              setToken('')
-            }}
-            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white"
-          >
-            Logout
-          </button>
-          <button
-            onClick={seedDatabase}
-            className="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg text-white"
-          >
-            Seed Test Data
-          </button>
-          <button
-            onClick={() => setShowUploadModal(true)}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white"
-          >
-            Upload Game Data
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white"
+            >
+              Upload Game Data
+            </button>
+            <button
+              onClick={() => setShowBulkDeleteModal(true)}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white"
+            >
+              Delete All Data
+            </button>
+            <button
+              onClick={() => {
+                setIsAuthenticated(false)
+                setToken('')
+              }}
+              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white"
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
         {/* Upload Modal */}
@@ -472,6 +484,56 @@ export default function AdminPage() {
                       setUploadData(null)
                       setUploadError('')
                     }}
+                    className="flex-1 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg font-semibold text-white"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Bulk Delete Modal */}
+        {showBulkDeleteModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-800 rounded-xl max-w-md w-full p-6">
+              <h2 className="text-xl font-bold text-white mb-4">Delete All Data</h2>
+
+              <p className="text-gray-400 mb-4">
+                Select which game data you want to delete. This action cannot be undone.
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2">Select Game</label>
+                  <select
+                    value={bulkDeleteType}
+                    onChange={(e) => setBulkDeleteType(e.target.value as 'squaddle' | 'outliers')}
+                    className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600"
+                  >
+                    <option value="squaddle">Squaddle ({players.length} players)</option>
+                    <option value="outliers">Outliers ({categories.length} categories)</option>
+                  </select>
+                </div>
+
+                <div className="bg-red-900/30 border border-red-700 p-3 rounded-lg">
+                  <p className="text-red-300 text-sm">
+                    Warning: This will permanently delete all{' '}
+                    {bulkDeleteType === 'squaddle' ? 'Squaddle players' : 'Outliers categories'}.
+                  </p>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={bulkDeleteData}
+                    disabled={loading}
+                    className="flex-1 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 rounded-lg font-semibold text-white"
+                  >
+                    {loading ? 'Deleting...' : 'Delete All'}
+                  </button>
+                  <button
+                    onClick={() => setShowBulkDeleteModal(false)}
                     className="flex-1 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg font-semibold text-white"
                   >
                     Cancel
