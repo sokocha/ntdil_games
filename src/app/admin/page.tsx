@@ -46,7 +46,11 @@ interface ScheduleDay {
     medium: { id: number; playerId: string; name: string } | null
     hard: { id: number; playerId: string; name: string } | null
   }
-  outliers: { id: number; connection: string; difficulty: number } | null
+  outliers: {
+    easy: { id: number; connection: string } | null
+    medium: { id: number; connection: string } | null
+    hard: { id: number; connection: string } | null
+  }
 }
 
 export default function AdminPage() {
@@ -436,37 +440,52 @@ export default function AdminPage() {
 
                       {/* Outliers Section */}
                       <div>
-                        <h3 className="text-lg font-semibold text-white mb-2">Outliers Category</h3>
-                        {day.outliers ? (
-                          <div className="p-3 rounded-lg bg-purple-900/30 border border-purple-700">
-                            <p className="text-white font-semibold">{day.outliers.connection}</p>
-                            <p className="text-gray-400 text-sm">
-                              Difficulty:{' '}
-                              {day.outliers.difficulty === 1
-                                ? 'Easy'
-                                : day.outliers.difficulty === 2
-                                  ? 'Medium'
-                                  : 'Hard'}
-                            </p>
-                            <button
-                              onClick={() => {
-                                const fullCategory = categories.find(
-                                  (c) => c.id === day.outliers?.id
-                                )
-                                if (fullCategory) {
-                                  setEditingCategory(fullCategory)
-                                  setShowCategoryForm(true)
-                                  setTab('categories')
-                                }
-                              }}
-                              className="text-blue-400 text-sm hover:underline mt-1"
-                            >
-                              Edit
-                            </button>
-                          </div>
-                        ) : (
-                          <p className="text-gray-500 italic">No category</p>
-                        )}
+                        <h3 className="text-lg font-semibold text-white mb-2">
+                          Outliers Categories
+                        </h3>
+                        <div className="grid gap-2 md:grid-cols-3">
+                          {(['easy', 'medium', 'hard'] as const).map((difficulty) => {
+                            const category = day.outliers[difficulty]
+                            return (
+                              <div
+                                key={difficulty}
+                                className={`p-3 rounded-lg ${
+                                  difficulty === 'easy'
+                                    ? 'bg-green-900/30 border border-green-700'
+                                    : difficulty === 'medium'
+                                      ? 'bg-yellow-900/30 border border-yellow-700'
+                                      : 'bg-red-900/30 border border-red-700'
+                                }`}
+                              >
+                                <p className="text-gray-400 text-xs uppercase mb-1">{difficulty}</p>
+                                {category ? (
+                                  <>
+                                    <p className="text-white font-semibold">
+                                      {category.connection}
+                                    </p>
+                                    <button
+                                      onClick={() => {
+                                        const fullCategory = categories.find(
+                                          (c) => c.id === category.id
+                                        )
+                                        if (fullCategory) {
+                                          setEditingCategory(fullCategory)
+                                          setShowCategoryForm(true)
+                                          setTab('categories')
+                                        }
+                                      }}
+                                      className="text-blue-400 text-sm hover:underline mt-1"
+                                    >
+                                      Edit
+                                    </button>
+                                  </>
+                                ) : (
+                                  <p className="text-gray-500 italic">No category</p>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
                       </div>
                     </div>
                   )}

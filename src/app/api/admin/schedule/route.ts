@@ -77,10 +77,21 @@ export async function GET(request: NextRequest) {
         shuffledHard[0] || null,
       ]
 
-      // Get Outliers category for this day (reset random for fair distribution)
+      // Get Outliers categories for this day (one per difficulty)
       const outliersRandom = seededRandom(seed + 1000)
-      const shuffledCategories = shuffleWithSeed(allCategories, outliersRandom)
-      const outliersCategory = shuffledCategories[0] || null
+      const easyCategories = allCategories.filter((c) => c.difficulty === 1)
+      const mediumCategories = allCategories.filter((c) => c.difficulty === 2)
+      const hardCategories = allCategories.filter((c) => c.difficulty === 3)
+
+      const shuffledEasyCategories = shuffleWithSeed(easyCategories, outliersRandom)
+      const shuffledMediumCategories = shuffleWithSeed(mediumCategories, outliersRandom)
+      const shuffledHardCategories = shuffleWithSeed(hardCategories, outliersRandom)
+
+      const outliersCategories = [
+        shuffledEasyCategories[0] || null,
+        shuffledMediumCategories[0] || null,
+        shuffledHardCategories[0] || null,
+      ]
 
       schedule.push({
         date: dateStr,
@@ -109,13 +120,26 @@ export async function GET(request: NextRequest) {
               }
             : null,
         },
-        outliers: outliersCategory
-          ? {
-              id: outliersCategory.id,
-              connection: outliersCategory.connection,
-              difficulty: outliersCategory.difficulty,
-            }
-          : null,
+        outliers: {
+          easy: outliersCategories[0]
+            ? {
+                id: outliersCategories[0].id,
+                connection: outliersCategories[0].connection,
+              }
+            : null,
+          medium: outliersCategories[1]
+            ? {
+                id: outliersCategories[1].id,
+                connection: outliersCategories[1].connection,
+              }
+            : null,
+          hard: outliersCategories[2]
+            ? {
+                id: outliersCategories[2].id,
+                connection: outliersCategories[2].connection,
+              }
+            : null,
+        },
       })
     }
 
