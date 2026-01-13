@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { db, players } from '@/db'
 
 // Seeded random for consistent daily selection
@@ -18,35 +18,64 @@ function shuffleWithSeed<T>(array: T[], random: () => number): T[] {
   return result
 }
 
+function dateToSeed(dateStr: string): number {
+  return dateStr.split('-').reduce((acc, part) => acc * 100 + parseInt(part), 0)
+}
+
 // GET daily players for Squaddle
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    // Accept date from client (uses client's local timezone)
+    const dateStr = searchParams.get('date')
+
+    // Validate date format or use server date as fallback
+    let targetDate: string
+    if (dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      targetDate = dateStr
+    } else {
+      // Fallback to server date (not ideal, but safe)
+      const now = new Date()
+      targetDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    }
+
     const allPlayers = await db.select().from(players)
 
     if (allPlayers.length === 0) {
       return NextResponse.json({ error: 'No players in database' }, { status: 404 })
     }
 
-    // Get today's date for seeding
-    const now = new Date()
-    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-    const seed = dateStr.split('-').reduce((acc, part) => acc * 100 + parseInt(part), 0)
+    const seed = dateToSeed(targetDate)
     const random = seededRandom(seed)
 
-    // Filter by difficulty
-    const easy = allPlayers.filter((p) => p.difficulty === 'easy')
-    const medium = allPlayers.filter((p) => p.difficulty === 'medium')
-    const hard = allPlayers.filter((p) => p.difficulty === 'hard')
+    // Check for scheduled players first (prioritize scheduled over random)
+    const scheduledEasy = allPlayers.find(
+      (p) => p.difficulty === 'easy' && p.scheduledDate === targetDate
+    )
+    const scheduledMedium = allPlayers.find(
+      (p) => p.difficulty === 'medium' && p.scheduledDate === targetDate
+    )
+    const scheduledHard = allPlayers.find(
+      (p) => p.difficulty === 'hard' && p.scheduledDate === targetDate
+    )
 
-    // Shuffle and pick one from each
-    const shuffledEasy = shuffleWithSeed(easy, random)
-    const shuffledMedium = shuffleWithSeed(medium, random)
-    const shuffledHard = shuffleWithSeed(hard, random)
+    // Filter unscheduled players by difficulty for random fallback
+    const unscheduledEasy = allPlayers.filter((p) => p.difficulty === 'easy' && !p.scheduledDate)
+    const unscheduledMedium = allPlayers.filter(
+      (p) => p.difficulty === 'medium' && !p.scheduledDate
+    )
+    const unscheduledHard = allPlayers.filter((p) => p.difficulty === 'hard' && !p.scheduledDate)
 
+    // Shuffle unscheduled players
+    const shuffledEasy = shuffleWithSeed(unscheduledEasy, random)
+    const shuffledMedium = shuffleWithSeed(unscheduledMedium, random)
+    const shuffledHard = shuffleWithSeed(unscheduledHard, random)
+
+    // Use scheduled if available, otherwise use random from unscheduled
     const dailyPlayers = [
-      shuffledEasy[0] || easy[0],
-      shuffledMedium[0] || medium[0],
-      shuffledHard[0] || hard[0],
+      scheduledEasy || shuffledEasy[0],
+      scheduledMedium || shuffledMedium[0],
+      scheduledHard || shuffledHard[0],
     ].filter(Boolean)
 
     // Transform to match expected format

@@ -47,12 +47,15 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const daysParam = searchParams.get('days') || '14'
     const days = Math.min(parseInt(daysParam), 30) // Max 30 days
+    // Accept client's local date for timezone consistency
+    const clientDate = searchParams.get('clientDate')
 
     const allPlayers = await db.select().from(players)
     const allCategories = await db.select().from(categories)
 
     const schedule = []
-    const today = new Date()
+    // Use client date if provided, otherwise use server date
+    const today = clientDate ? new Date(clientDate + 'T00:00:00') : new Date()
 
     for (let i = 0; i < days; i++) {
       const date = new Date(today)

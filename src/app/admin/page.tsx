@@ -139,7 +139,9 @@ export default function AdminPage() {
   const fetchSchedule = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/admin/schedule?days=14', {
+      // Pass client's local date for timezone consistency
+      const clientDate = getLocalTodayString()
+      const res = await fetch(`/api/admin/schedule?days=14&clientDate=${clientDate}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (res.status === 401) {
