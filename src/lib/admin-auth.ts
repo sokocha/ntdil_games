@@ -17,7 +17,10 @@ export function verifyAdminAuth(request: NextRequest): boolean {
 
 export function unauthorizedResponse() {
   return NextResponse.json(
-    { error: 'Unauthorized', hint: !process.env.ADMIN_SECRET ? 'ADMIN_SECRET not configured' : undefined },
+    {
+      error: 'Unauthorized',
+      hint: !process.env.ADMIN_SECRET ? 'ADMIN_SECRET not configured' : undefined,
+    },
     { status: 401 }
   )
 }
