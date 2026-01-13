@@ -269,7 +269,9 @@ export default function AdminPage() {
       })
       if (res.ok) {
         const data = await res.json()
-        alert(`Deleted ${data.deletedCount} ${bulkDeleteType === 'squaddle' ? 'players' : 'categories'}`)
+        alert(
+          `Deleted ${data.deletedCount} ${bulkDeleteType === 'squaddle' ? 'players' : 'categories'}`
+        )
         setShowBulkDeleteModal(false)
         fetchPlayers()
         fetchCategories()
