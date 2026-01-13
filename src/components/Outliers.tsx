@@ -36,6 +36,15 @@ const getTimeUntilMidnight = (): number => {
   return midnight.getTime() - now.getTime()
 }
 
+// Get today's date string in YYYY-MM-DD format (local timezone)
+const getTodayString = (): string => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 const formatTime = (ms: number): string => {
   const hours = Math.floor(ms / (1000 * 60 * 60))
   const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60))
@@ -6948,21 +6957,67 @@ export default function Outlier() {
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    const p = generatePuzzle()
-    setPuzzle(p)
+    // Fetch puzzle from API with client's local date
+    const fetchPuzzle = async () => {
+      const today = getTodayString()
+      try {
+        const res = await fetch(`/api/games/outliers?date=${today}`)
+        if (res.ok) {
+          const data = await res.json()
+          setPuzzle(data)
 
-    const saved = loadGameData()
-    if (saved) {
-      setStreak(saved.streak || 0)
-      setBestStreak(saved.bestStreak || 0)
+          const saved = loadGameData()
+          if (saved) {
+            setStreak(saved.streak || 0)
+            setBestStreak(saved.bestStreak || 0)
 
-      if (saved.lastPlayedDay === p.dayNum) {
-        setAlreadyPlayed(true)
-        setRoundResults(saved.lastResults || [])
-        setCurrentRound(3)
-        setGameState(saved.lastGameState || 'lost')
+            if (saved.lastPlayedDay === data.dayNum) {
+              setAlreadyPlayed(true)
+              setRoundResults(saved.lastResults || [])
+              setCurrentRound(3)
+              setGameState(saved.lastGameState || 'lost')
+            }
+          }
+        } else {
+          // Fallback to local generation if API fails
+          console.error('Failed to fetch puzzle from API, using local generation')
+          const p = generatePuzzle()
+          setPuzzle(p)
+
+          const saved = loadGameData()
+          if (saved) {
+            setStreak(saved.streak || 0)
+            setBestStreak(saved.bestStreak || 0)
+
+            if (saved.lastPlayedDay === p.dayNum) {
+              setAlreadyPlayed(true)
+              setRoundResults(saved.lastResults || [])
+              setCurrentRound(3)
+              setGameState(saved.lastGameState || 'lost')
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching puzzle:', error)
+        // Fallback to local generation
+        const p = generatePuzzle()
+        setPuzzle(p)
+
+        const saved = loadGameData()
+        if (saved) {
+          setStreak(saved.streak || 0)
+          setBestStreak(saved.bestStreak || 0)
+
+          if (saved.lastPlayedDay === p.dayNum) {
+            setAlreadyPlayed(true)
+            setRoundResults(saved.lastResults || [])
+            setCurrentRound(3)
+            setGameState(saved.lastGameState || 'lost')
+          }
+        }
       }
     }
+    fetchPuzzle()
   }, [])
 
   useEffect(() => {
