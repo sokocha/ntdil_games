@@ -221,6 +221,31 @@ export default function AdminPage() {
     setLoading(false)
   }
 
+  const seedDatabase = async () => {
+    if (!window.confirm('This will replace ALL existing data with sample data. Are you sure?'))
+      return
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/seed', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        alert(`Seeded ${data.players} players and ${data.categories} categories`)
+        fetchPlayers()
+        fetchCategories()
+        fetchSchedule()
+      } else {
+        const data = await res.json()
+        setError(data.error || 'Failed to seed database')
+      }
+    } catch {
+      setError('Failed to seed database')
+    }
+    setLoading(false)
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 p-4">
@@ -258,6 +283,12 @@ export default function AdminPage() {
             className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white"
           >
             Logout
+          </button>
+          <button
+            onClick={seedDatabase}
+            className="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg text-white"
+          >
+            Seed Data
           </button>
         </div>
 
