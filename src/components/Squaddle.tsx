@@ -164,8 +164,24 @@ export default function Squaddle() {
     setBestStreak(streakData.bestStreak)
 
     // Load score history data
-    setAverageScore(getAverageScore())
-    setGamesPlayed(getGamesPlayed())
+    const avgScore = getAverageScore()
+    const played = getGamesPlayed()
+    setAverageScore(avgScore)
+    setGamesPlayed(played)
+
+    // Ensure streak stats are consistent with games played
+    // Best streak can't exceed total games played
+    if (streakData.bestStreak > played && played > 0) {
+      const correctedBestStreak = Math.min(streakData.bestStreak, played)
+      const correctedStreak = Math.min(streakData.streak, played)
+      setBestStreak(correctedBestStreak)
+      setStreak(correctedStreak)
+      saveStreakData({
+        ...streakData,
+        bestStreak: correctedBestStreak,
+        streak: correctedStreak,
+      })
+    }
 
     const saved = loadGameState()
     if (saved) {
