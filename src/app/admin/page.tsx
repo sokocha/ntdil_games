@@ -28,6 +28,15 @@ interface Category {
 
 type Tab = 'schedule' | 'players' | 'categories'
 
+// Helper to get today's date string in local timezone
+function getLocalTodayString(): string {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 interface ScheduleDay {
   date: string
   dayNumber: number
@@ -50,6 +59,12 @@ export default function AdminPage() {
   // Schedule state
   const [schedule, setSchedule] = useState<ScheduleDay[]>([])
   const [expandedDay, setExpandedDay] = useState<string | null>(null)
+  const [localToday, setLocalToday] = useState<string>('')
+
+  // Set local today on client mount
+  useEffect(() => {
+    setLocalToday(getLocalTodayString())
+  }, [])
 
   // Players state
   const [players, setPlayers] = useState<Player[]>([])
@@ -346,7 +361,7 @@ export default function AdminPage() {
                 <div
                   key={day.date}
                   className={`bg-gray-800 rounded-lg border ${
-                    day.isToday ? 'border-blue-500' : 'border-gray-700'
+                    day.date === localToday ? 'border-blue-500' : 'border-gray-700'
                   }`}
                 >
                   <button
@@ -355,16 +370,16 @@ export default function AdminPage() {
                   >
                     <div className="flex items-center gap-4">
                       <span className="text-white font-semibold">
-                        {day.isToday
+                        {day.date === localToday
                           ? 'Today'
-                          : new Date(day.date).toLocaleDateString('en-US', {
+                          : new Date(day.date + 'T00:00:00').toLocaleDateString('en-US', {
                               weekday: 'short',
                               month: 'short',
                               day: 'numeric',
                             })}
                       </span>
                       <span className="text-gray-400 text-sm">#{day.dayNumber}</span>
-                      {day.isToday && (
+                      {day.date === localToday && (
                         <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded">
                           LIVE
                         </span>
