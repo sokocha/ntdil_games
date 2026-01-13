@@ -26,14 +26,30 @@ interface Category {
   outliers: string[]
 }
 
-type Tab = 'players' | 'categories'
+type Tab = 'schedule' | 'players' | 'categories'
+
+interface ScheduleDay {
+  date: string
+  dayNumber: number
+  isToday: boolean
+  squaddle: {
+    easy: { id: number; playerId: string; name: string } | null
+    medium: { id: number; playerId: string; name: string } | null
+    hard: { id: number; playerId: string; name: string } | null
+  }
+  outliers: { id: number; connection: string; difficulty: number } | null
+}
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [password, setPassword] = useState('')
   const [token, setToken] = useState('')
   const [error, setError] = useState('')
-  const [tab, setTab] = useState<Tab>('players')
+  const [tab, setTab] = useState<Tab>('schedule')
+
+  // Schedule state
+  const [schedule, setSchedule] = useState<ScheduleDay[]>([])
+  const [expandedDay, setExpandedDay] = useState<string | null>(null)
 
   // Players state
   const [players, setPlayers] = useState<Player[]>([])
@@ -92,12 +108,32 @@ export default function AdminPage() {
     setLoading(false)
   }, [token])
 
+  const fetchSchedule = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/schedule?days=14', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.status === 401) {
+        setIsAuthenticated(false)
+        setError('Invalid password')
+        return
+      }
+      const data = await res.json()
+      setSchedule(data)
+    } catch {
+      setError('Failed to fetch schedule')
+    }
+    setLoading(false)
+  }, [token])
+
   useEffect(() => {
     if (isAuthenticated && token) {
       fetchPlayers()
       fetchCategories()
+      fetchSchedule()
     }
-  }, [isAuthenticated, token, fetchPlayers, fetchCategories])
+  }, [isAuthenticated, token, fetchPlayers, fetchCategories, fetchSchedule])
 
   const savePlayer = async (player: Partial<Player>) => {
     setLoading(true)
@@ -185,6 +221,31 @@ export default function AdminPage() {
     setLoading(false)
   }
 
+  const seedDatabase = async () => {
+    if (!window.confirm('This will replace ALL existing data with sample data. Are you sure?'))
+      return
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/seed', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        alert(`Seeded ${data.players} players and ${data.categories} categories`)
+        fetchPlayers()
+        fetchCategories()
+        fetchSchedule()
+      } else {
+        const data = await res.json()
+        setError(data.error || 'Failed to seed database')
+      }
+    } catch {
+      setError('Failed to seed database')
+    }
+    setLoading(false)
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 p-4">
@@ -223,6 +284,12 @@ export default function AdminPage() {
           >
             Logout
           </button>
+          <button
+            onClick={seedDatabase}
+            className="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg text-white"
+          >
+            Seed Data
+          </button>
         </div>
 
         {error && (
@@ -235,7 +302,17 @@ export default function AdminPage() {
         )}
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-6 flex-wrap">
+          <button
+            onClick={() => setTab('schedule')}
+            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+              tab === 'schedule'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+            }`}
+          >
+            Schedule
+          </button>
           <button
             onClick={() => setTab('players')}
             className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
@@ -259,6 +336,130 @@ export default function AdminPage() {
         </div>
 
         {loading && <p className="text-gray-400 mb-4">Loading...</p>}
+
+        {/* Schedule Tab */}
+        {tab === 'schedule' && (
+          <div>
+            <h2 className="text-xl font-semibold text-white mb-4">Upcoming 14 Days</h2>
+            <div className="space-y-3">
+              {schedule.map((day) => (
+                <div
+                  key={day.date}
+                  className={`bg-gray-800 rounded-lg border ${
+                    day.isToday ? 'border-blue-500' : 'border-gray-700'
+                  }`}
+                >
+                  <button
+                    onClick={() => setExpandedDay(expandedDay === day.date ? null : day.date)}
+                    className="w-full p-4 text-left flex justify-between items-center"
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className="text-white font-semibold">
+                        {day.isToday
+                          ? 'Today'
+                          : new Date(day.date).toLocaleDateString('en-US', {
+                              weekday: 'short',
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                      </span>
+                      <span className="text-gray-400 text-sm">#{day.dayNumber}</span>
+                      {day.isToday && (
+                        <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded">
+                          LIVE
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-gray-400">{expandedDay === day.date ? '▼' : '▶'}</span>
+                  </button>
+
+                  {expandedDay === day.date && (
+                    <div className="px-4 pb-4 border-t border-gray-700 pt-4">
+                      {/* Squaddle Section */}
+                      <div className="mb-4">
+                        <h3 className="text-lg font-semibold text-white mb-2">Squaddle Players</h3>
+                        <div className="grid gap-2 md:grid-cols-3">
+                          {(['easy', 'medium', 'hard'] as const).map((difficulty) => {
+                            const player = day.squaddle[difficulty]
+                            return (
+                              <div
+                                key={difficulty}
+                                className={`p-3 rounded-lg ${
+                                  difficulty === 'easy'
+                                    ? 'bg-green-900/30 border border-green-700'
+                                    : difficulty === 'medium'
+                                      ? 'bg-yellow-900/30 border border-yellow-700'
+                                      : 'bg-red-900/30 border border-red-700'
+                                }`}
+                              >
+                                <p className="text-gray-400 text-xs uppercase mb-1">{difficulty}</p>
+                                {player ? (
+                                  <>
+                                    <p className="text-white font-semibold">{player.name}</p>
+                                    <button
+                                      onClick={() => {
+                                        const fullPlayer = players.find((p) => p.id === player.id)
+                                        if (fullPlayer) {
+                                          setEditingPlayer(fullPlayer)
+                                          setShowPlayerForm(true)
+                                          setTab('players')
+                                        }
+                                      }}
+                                      className="text-blue-400 text-sm hover:underline mt-1"
+                                    >
+                                      Edit
+                                    </button>
+                                  </>
+                                ) : (
+                                  <p className="text-gray-500 italic">No player</p>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Outliers Section */}
+                      <div>
+                        <h3 className="text-lg font-semibold text-white mb-2">Outliers Category</h3>
+                        {day.outliers ? (
+                          <div className="p-3 rounded-lg bg-purple-900/30 border border-purple-700">
+                            <p className="text-white font-semibold">{day.outliers.connection}</p>
+                            <p className="text-gray-400 text-sm">
+                              Difficulty:{' '}
+                              {day.outliers.difficulty === 1
+                                ? 'Easy'
+                                : day.outliers.difficulty === 2
+                                  ? 'Medium'
+                                  : 'Hard'}
+                            </p>
+                            <button
+                              onClick={() => {
+                                const fullCategory = categories.find(
+                                  (c) => c.id === day.outliers?.id
+                                )
+                                if (fullCategory) {
+                                  setEditingCategory(fullCategory)
+                                  setShowCategoryForm(true)
+                                  setTab('categories')
+                                }
+                              }}
+                              className="text-blue-400 text-sm hover:underline mt-1"
+                            >
+                              Edit
+                            </button>
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 italic">No category</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Players Tab */}
         {tab === 'players' && (
