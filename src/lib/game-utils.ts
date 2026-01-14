@@ -17,12 +17,11 @@ export function getTodayString(): string {
   return `${year}-${month}-${day}`
 }
 
-// Squaddle launch date - used for puzzle numbering
-const SQUADDLE_START_DATE = '2026-01-09'
-
 // Get day number since launch (1-indexed)
 export function getDayNumber(): number {
-  const start = new Date(SQUADDLE_START_DATE).setHours(0, 0, 0, 0)
+  // Use Date constructor with explicit values to avoid UTC parsing issues
+  // new Date(year, monthIndex, day) uses local timezone consistently
+  const start = new Date(2026, 0, 9).setHours(0, 0, 0, 0) // Jan 9, 2026 local midnight
   const now = new Date().setHours(0, 0, 0, 0)
   return Math.floor((now - start) / (1000 * 60 * 60 * 24)) + 1
 }
