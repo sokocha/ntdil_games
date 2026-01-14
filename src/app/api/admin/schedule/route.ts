@@ -94,7 +94,10 @@ export async function GET(request: NextRequest) {
       ]
 
       // Get Outliers categories for this day (prioritize scheduled, then random)
-      const outliersRandom = seededRandom(seed + 1000)
+      // Use same seeding algorithm as Outliers API: seed + difficulty * 1000
+      const easyOutliersRandom = seededRandom(seed + 1 * 1000)
+      const mediumOutliersRandom = seededRandom(seed + 2 * 1000)
+      const hardOutliersRandom = seededRandom(seed + 3 * 1000)
 
       const scheduledEasyCategory = allCategories.find(
         (c) => c.difficulty === 1 && c.scheduledDate === dateStr
@@ -117,9 +120,12 @@ export async function GET(request: NextRequest) {
         (c) => c.difficulty === 3 && !c.scheduledDate
       )
 
-      const shuffledEasyCategories = shuffleWithSeed(unscheduledEasyCategories, outliersRandom)
-      const shuffledMediumCategories = shuffleWithSeed(unscheduledMediumCategories, outliersRandom)
-      const shuffledHardCategories = shuffleWithSeed(unscheduledHardCategories, outliersRandom)
+      const shuffledEasyCategories = shuffleWithSeed(unscheduledEasyCategories, easyOutliersRandom)
+      const shuffledMediumCategories = shuffleWithSeed(
+        unscheduledMediumCategories,
+        mediumOutliersRandom
+      )
+      const shuffledHardCategories = shuffleWithSeed(unscheduledHardCategories, hardOutliersRandom)
 
       const outliersCategories = [
         scheduledEasyCategory || shuffledEasyCategories[0] || null,
