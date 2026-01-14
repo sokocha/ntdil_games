@@ -15,6 +15,13 @@ const games = [
     emoji: '🔍',
     available: true,
   },
+  {
+    id: 'simon',
+    name: 'Simon Says',
+    description: 'Memorize and repeat the sequence',
+    emoji: '🎮',
+    available: true,
+  },
 ]
 
 export default function Home() {
