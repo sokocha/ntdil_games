@@ -23,7 +23,7 @@ export default function Home() {
       <div className="max-w-4xl mx-auto">
         <header className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-2">NTDIL Games</h1>
-          <p className="text-gray-500 dark:text-gray-400">Daily games to challenge your brain</p>
+          <p className="text-gray-400">Daily games to challenge your brain</p>
         </header>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -32,17 +32,17 @@ export default function Home() {
               {game.available ? (
                 <Link
                   href={`/${game.id}`}
-                  className="block p-6 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all"
+                  className="block p-6 rounded-xl border border-gray-800 hover:border-gray-600 hover:bg-gray-900 transition-all"
                 >
                   <div className="text-4xl mb-3">{game.emoji}</div>
                   <h2 className="text-xl font-semibold mb-1">{game.name}</h2>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">{game.description}</p>
+                  <p className="text-gray-400 text-sm">{game.description}</p>
                 </Link>
               ) : (
-                <div className="block p-6 rounded-xl border border-gray-200 dark:border-gray-800 opacity-50 cursor-not-allowed">
+                <div className="block p-6 rounded-xl border border-gray-800 opacity-50 cursor-not-allowed">
                   <div className="text-4xl mb-3">{game.emoji}</div>
                   <h2 className="text-xl font-semibold mb-1">{game.name}</h2>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">{game.description}</p>
+                  <p className="text-gray-400 text-sm">{game.description}</p>
                 </div>
               )}
             </div>
