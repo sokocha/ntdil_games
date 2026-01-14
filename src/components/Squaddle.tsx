@@ -472,27 +472,27 @@ export default function Squaddle() {
 
         {/* Stats */}
         <div className="flex justify-center gap-3 mt-6 flex-wrap">
-          <div className="text-center px-4 py-3 rounded-xl bg-gray-800/50 border border-gray-700">
+          <div className="text-center px-4 py-3 rounded-xl bg-gray-800 border border-gray-700">
             <div className="text-2xl font-bold text-purple-400">{streak}</div>
-            <div className="text-xs text-gray-500 uppercase tracking-wide">Streak</div>
+            <div className="text-xs text-gray-300 uppercase tracking-wide">Streak</div>
           </div>
-          <div className="text-center px-4 py-3 rounded-xl bg-gray-800/50 border border-gray-700">
+          <div className="text-center px-4 py-3 rounded-xl bg-gray-800 border border-gray-700">
             <div className="text-2xl font-bold text-purple-400">{bestStreak}</div>
-            <div className="text-xs text-gray-500 uppercase tracking-wide">Best</div>
+            <div className="text-xs text-gray-300 uppercase tracking-wide">Best</div>
           </div>
-          <div className="text-center px-4 py-3 rounded-xl bg-gray-800/50 border border-gray-700">
+          <div className="text-center px-4 py-3 rounded-xl bg-gray-800 border border-gray-700">
             <div className="text-2xl font-bold text-blue-400">{averageScore}</div>
-            <div className="text-xs text-gray-500 uppercase tracking-wide">Avg Score</div>
+            <div className="text-xs text-gray-300 uppercase tracking-wide">Avg Score</div>
           </div>
-          <div className="text-center px-4 py-3 rounded-xl bg-gray-800/50 border border-gray-700">
+          <div className="text-center px-4 py-3 rounded-xl bg-gray-800 border border-gray-700">
             <div className="text-2xl font-bold text-green-400">{gamesPlayed}</div>
-            <div className="text-xs text-gray-500 uppercase tracking-wide">Played</div>
+            <div className="text-xs text-gray-300 uppercase tracking-wide">Played</div>
           </div>
         </div>
 
         {/* Countdown */}
         <div className="text-center mt-6">
-          <p className="text-xs text-gray-500 mb-1">Next puzzle in</p>
+          <p className="text-xs text-gray-300 mb-1">Next puzzle in</p>
           <p className="text-2xl font-light font-mono text-white">
             {formatCountdown(timeUntilNext)}
           </p>
@@ -678,7 +678,7 @@ export default function Squaddle() {
           onChange={(e) => setGuess(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleGuess()}
           placeholder="Enter player name..."
-          className="flex-1 px-4 py-4 bg-gray-900 border-2 border-gray-700 rounded-xl focus:outline-none focus:border-blue-500 text-lg transition-colors"
+          className="flex-1 px-4 py-4 bg-gray-900 border-2 border-gray-700 rounded-xl focus:outline-none focus:border-blue-500 text-lg transition-colors text-white placeholder-gray-500"
           autoComplete="off"
           autoCapitalize="off"
         />
