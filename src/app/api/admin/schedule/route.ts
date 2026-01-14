@@ -31,11 +31,12 @@ function formatDate(date: Date): string {
 }
 
 // Squaddle launch date
-const SQUADDLE_START_DATE = '2026-01-09'
-
 function getDayNumberForDate(dateStr: string): number {
-  const start = new Date(SQUADDLE_START_DATE).setHours(0, 0, 0, 0)
-  const target = new Date(dateStr).setHours(0, 0, 0, 0)
+  // Use Date constructor with explicit values to avoid UTC parsing issues
+  const start = new Date(2026, 0, 9).setHours(0, 0, 0, 0) // Jan 9, 2026
+  // Parse the date string (YYYY-MM-DD) into components to avoid UTC issues
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const target = new Date(year, month - 1, day).setHours(0, 0, 0, 0)
   return Math.floor((target - start) / (1000 * 60 * 60 * 24)) + 1
 }
 
