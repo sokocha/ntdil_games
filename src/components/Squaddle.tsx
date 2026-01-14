@@ -678,7 +678,7 @@ export default function Squaddle() {
           onChange={(e) => setGuess(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleGuess()}
           placeholder="Enter player name..."
-          className="flex-1 px-4 py-4 bg-gray-900 border-2 border-gray-700 rounded-xl focus:outline-none focus:border-blue-500 text-lg transition-colors"
+          className="flex-1 px-4 py-4 bg-gray-900 border-2 border-gray-700 rounded-xl focus:outline-none focus:border-blue-500 text-lg transition-colors text-white placeholder-gray-500"
           autoComplete="off"
           autoCapitalize="off"
         />
