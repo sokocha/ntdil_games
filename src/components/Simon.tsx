@@ -39,7 +39,7 @@ const COLORS = [
 ]
 
 type Difficulty = 'easy' | 'medium' | 'hard'
-type GameState = 'ready' | 'playing' | 'gameComplete'
+type GameState = 'ready' | 'countdown' | 'playing' | 'gameComplete'
 
 interface SavedState {
   dayNumber: number
@@ -86,6 +86,7 @@ const Simon = () => {
   const [message, setMessage] = useState('')
   const [highestStreak, setHighestStreak] = useState(0)
   const [soundEnabled, setSoundEnabled] = useState(true)
+  const [countdown, setCountdown] = useState<number | null>(null)
 
   // eslint-disable-next-line no-undef
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -101,8 +102,8 @@ const Simon = () => {
     }
   }, [dayNumber])
 
-  // Initialize audio context on first interaction
-  const initAudio = useCallback(async () => {
+  // Initialize audio context - must be called synchronously from user gesture
+  const initAudio = useCallback(() => {
     if (!audioContextRef.current) {
       /* eslint-disable no-undef */
       const AudioContextClass =
@@ -111,20 +112,67 @@ const Simon = () => {
       /* eslint-enable no-undef */
       audioContextRef.current = new AudioContextClass()
     }
-    // Mobile browsers require resume() to be awaited after user gesture
-    if (audioContextRef.current.state === 'suspended') {
-      await audioContextRef.current.resume()
-    }
     return audioContextRef.current
   }, [])
 
-  // Play a tone for a button
-  const playTone = useCallback(
-    async (buttonIndex: number, duration = 300) => {
+  // Unlock audio for iOS - play silent buffer synchronously on user gesture
+  const unlockAudio = useCallback(() => {
+    const ctx = initAudio()
+    if (ctx.state === 'suspended') {
+      ctx.resume()
+    }
+    // Play a silent buffer to fully unlock audio on iOS
+    const buffer = ctx.createBuffer(1, 1, 22050)
+    const source = ctx.createBufferSource()
+    source.buffer = buffer
+    source.connect(ctx.destination)
+    source.start(0)
+  }, [initAudio])
+
+  // Play countdown beep sound
+  const playCountdownBeep = useCallback(
+    (isGo = false) => {
       if (!soundEnabled) return
 
       try {
-        const ctx = await initAudio()
+        const ctx = initAudio()
+        if (ctx.state === 'suspended') {
+          ctx.resume()
+        }
+
+        const oscillator = ctx.createOscillator()
+        const gainNode = ctx.createGain()
+
+        oscillator.connect(gainNode)
+        gainNode.connect(ctx.destination)
+
+        // Higher pitch for "GO!"
+        oscillator.frequency.value = isGo ? 880 : 440
+        oscillator.type = 'sine'
+
+        const duration = isGo ? 0.3 : 0.15
+        gainNode.gain.setValueAtTime(0.3, ctx.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration)
+
+        oscillator.start(ctx.currentTime)
+        oscillator.stop(ctx.currentTime + duration)
+      } catch {
+        // Audio not available - fail silently
+      }
+    },
+    [soundEnabled, initAudio]
+  )
+
+  // Play a tone for a button
+  const playTone = useCallback(
+    (buttonIndex: number, duration = 300) => {
+      if (!soundEnabled) return
+
+      try {
+        const ctx = initAudio()
+        if (ctx.state === 'suspended') {
+          ctx.resume()
+        }
 
         const oscillator = ctx.createOscillator()
         const gainNode = ctx.createGain()
@@ -148,11 +196,14 @@ const Simon = () => {
   )
 
   // Play error sound
-  const playErrorSound = useCallback(async () => {
+  const playErrorSound = useCallback(() => {
     if (!soundEnabled) return
 
     try {
-      const ctx = await initAudio()
+      const ctx = initAudio()
+      if (ctx.state === 'suspended') {
+        ctx.resume()
+      }
 
       const oscillator = ctx.createOscillator()
       const gainNode = ctx.createGain()
@@ -224,13 +275,35 @@ const Simon = () => {
     [dayNumber, playSequence]
   )
 
+  // Handle countdown timer
+  useEffect(() => {
+    if (countdown === null || gameState !== 'countdown') return
+
+    if (countdown > 0) {
+      playCountdownBeep(false)
+      const timer = setTimeout(() => {
+        setCountdown(countdown - 1)
+      }, 1000)
+      return () => clearTimeout(timer)
+    } else {
+      // Countdown finished - play "GO!" beep and start round
+      playCountdownBeep(true)
+      const timer = setTimeout(() => {
+        setCountdown(null)
+        setGameState('playing')
+        startRound(round)
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [countdown, gameState, round, playCountdownBeep, startRound])
+
   // Handle button press
   const handleButtonPress = useCallback(
     (buttonIndex: number) => {
       if (!isPlayerTurn || isPlaying) return
 
-      // Initialize audio on first interaction
-      initAudio()
+      // Unlock audio on user interaction for iOS
+      unlockAudio()
 
       setActiveButton(buttonIndex)
       playTone(buttonIndex, 200)
@@ -322,7 +395,7 @@ const Simon = () => {
       playTone,
       playErrorSound,
       playSequence,
-      initAudio,
+      unlockAudio,
     ]
   )
 
@@ -345,10 +418,11 @@ const Simon = () => {
     }
   }
 
-  const handleStart = async () => {
-    await initAudio()
-    setGameState('playing')
-    startRound(round)
+  const handleStart = () => {
+    // Must unlock audio synchronously on user gesture for iOS
+    unlockAudio()
+    setGameState('countdown')
+    setCountdown(3)
   }
 
   const getStarRating = (score: number): number => {
@@ -571,6 +645,44 @@ const Simon = () => {
           >
             {round < 2 ? `Next: ${difficultyLabels[round + 1]} →` : '🏆 See Results'}
           </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Countdown Screen
+  if (gameState === 'countdown') {
+    const difficulty = difficulties[round]
+
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+          padding: '20px',
+          fontFamily: 'system-ui, sans-serif',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '14px', color: '#64748b', marginBottom: '16px' }}>
+            {difficultyLabels[round]} ROUND
+          </div>
+          <div
+            style={{
+              fontSize: countdown === 0 ? '80px' : '120px',
+              fontWeight: 'bold',
+              color: countdown === 0 ? '#22c55e' : difficultyColors[difficulty],
+              textShadow: `0 0 40px ${countdown === 0 ? '#22c55e' : difficultyColors[difficulty]}`,
+              animation: 'pulse 0.5s ease-in-out',
+            }}
+          >
+            {countdown === 0 ? 'GO!' : countdown}
+          </div>
+          <div style={{ fontSize: '16px', color: '#94a3b8', marginTop: '24px' }}>Get ready...</div>
         </div>
       </div>
     )
