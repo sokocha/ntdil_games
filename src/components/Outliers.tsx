@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { unlockAudio, feedbackCorrect, feedbackWrong, feedbackGameComplete } from '@/lib/feedback'
+import StreakToast from '@/components/StreakToast'
 
 // Type definitions
 interface GameData {
@@ -103,6 +105,12 @@ export default function Outlier() {
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showStreakToast, setShowStreakToast] = useState(false)
+  const [streakToastData, setStreakToastData] = useState({
+    streak: 0,
+    bestStreak: 0,
+    isNewBest: false,
+  })
 
   useEffect(() => {
     // Fetch puzzle from API with client's local date
@@ -157,8 +165,18 @@ export default function Outlier() {
   const handleSubmit = () => {
     if (selectedIndex === null || !puzzle || showingAnswer) return
 
+    // Unlock audio on user interaction (for iOS)
+    unlockAudio()
+
     const round = puzzle.rounds[currentRound]
     const isCorrect = selectedIndex === round.outlierIndex
+
+    // Play sound/haptic feedback
+    if (isCorrect) {
+      feedbackCorrect()
+    } else {
+      feedbackWrong()
+    }
 
     // Store the result for this round
     const newResults = [...roundResults, isCorrect]
@@ -180,6 +198,9 @@ export default function Outlier() {
       const newGameState = perfectScore ? 'won' : 'lost'
       setGameState(newGameState)
 
+      // Play game complete sound
+      feedbackGameComplete()
+
       // Update stats
       const saved = loadGameData() || {}
       const wasPlayedYesterday = saved.lastPlayedDay === puzzle.dayNum - 1
@@ -192,6 +213,7 @@ export default function Outlier() {
       }
 
       const newBestStreak = Math.max(bestStreak, newStreak)
+      const isNewBest = newStreak > bestStreak
       setStreak(newStreak)
       setBestStreak(newBestStreak)
 
@@ -202,6 +224,10 @@ export default function Outlier() {
         streak: newStreak,
         bestStreak: newBestStreak,
       })
+
+      // Show streak toast
+      setStreakToastData({ streak: newStreak, bestStreak: newBestStreak, isNewBest })
+      setShowStreakToast(true)
     }
   }
 
@@ -309,6 +335,13 @@ export default function Outlier() {
         color: '#fff',
       }}
     >
+      <StreakToast
+        streak={streakToastData.streak}
+        bestStreak={streakToastData.bestStreak}
+        isNewBest={streakToastData.isNewBest}
+        show={showStreakToast}
+        onClose={() => setShowStreakToast(false)}
+      />
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
         <h1

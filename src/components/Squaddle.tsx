@@ -22,6 +22,13 @@ import {
   getAverageScore,
   getGamesPlayed,
 } from '@/lib/game-utils'
+import {
+  unlockAudio,
+  feedbackWrong,
+  feedbackRoundComplete,
+  feedbackGameComplete,
+} from '@/lib/feedback'
+import StreakToast from '@/components/StreakToast'
 
 function OnboardingModal({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState(0)
@@ -148,6 +155,12 @@ export default function Squaddle() {
   const [timeUntilNext, setTimeUntilNext] = useState(0)
   const [averageScore, setAverageScore] = useState(0)
   const [gamesPlayed, setGamesPlayed] = useState(0)
+  const [showStreakToast, setShowStreakToast] = useState(false)
+  const [streakToastData, setStreakToastData] = useState({
+    streak: 0,
+    bestStreak: 0,
+    isNewBest: false,
+  })
 
   // Initialize game on mount
   useEffect(() => {
@@ -240,6 +253,7 @@ export default function Squaddle() {
     }
 
     const newBestStreak = Math.max(bestStreak, newStreak)
+    const isNewBest = newStreak > bestStreak
     setStreak(newStreak)
     setBestStreak(newBestStreak)
 
@@ -253,15 +267,12 @@ export default function Squaddle() {
     addScoreToHistory(dayNum, gameState.totalScore, gameState.date)
     setAverageScore(getAverageScore())
     setGamesPlayed(getGamesPlayed())
-  }, [
-    gameState?.gameComplete,
-    gameState?.rounds,
-    gameState?.totalScore,
-    gameState?.date,
-    dayNum,
-    streak,
-    bestStreak,
-  ])
+
+    // Show streak toast
+    setStreakToastData({ streak: newStreak, bestStreak: newBestStreak, isNewBest })
+    setShowStreakToast(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameState?.gameComplete, dayNum])
 
   const currentRound = gameState?.rounds[gameState.currentRound]
   const currentPlayer = dailyPlayers[gameState?.currentRound ?? 0]
@@ -283,9 +294,14 @@ export default function Squaddle() {
   const handleGuess = useCallback(() => {
     if (!gameState || !currentRound || !currentPlayer || !guess.trim()) return
 
+    // Unlock audio on user interaction (for iOS)
+    unlockAudio()
+
     const isCorrect = checkGuess(guess, currentPlayer)
 
     if (isCorrect) {
+      const isLastRound = gameState.currentRound === 2
+
       setGameState((prev) => {
         if (!prev) return prev
         const newRounds = [...prev.rounds]
@@ -301,7 +317,6 @@ export default function Squaddle() {
         }
 
         const newTotalScore = newRounds.reduce((sum, r) => sum + r.score, 0)
-        const isLastRound = prev.currentRound === 2
 
         return {
           ...prev,
@@ -310,6 +325,13 @@ export default function Squaddle() {
           gameComplete: isLastRound,
         }
       })
+
+      // Play appropriate sound/haptic feedback
+      if (isLastRound) {
+        feedbackGameComplete()
+      } else {
+        feedbackRoundComplete()
+      }
 
       setFeedback('Correct!')
       setGuess('')
@@ -325,6 +347,7 @@ export default function Squaddle() {
         return { ...prev, rounds: newRounds }
       })
 
+      feedbackWrong()
       setFeedback('Wrong! Try again.')
       setGuess('')
     }
@@ -557,6 +580,13 @@ export default function Squaddle() {
   return (
     <div className="max-w-xl mx-auto p-6">
       {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
+      <StreakToast
+        streak={streakToastData.streak}
+        bestStreak={streakToastData.bestStreak}
+        isNewBest={streakToastData.isNewBest}
+        show={showStreakToast}
+        onClose={() => setShowStreakToast(false)}
+      />
 
       <div className="text-center mb-2">
         <h1 className="text-4xl font-bold tracking-widest">SQUADDLE</h1>
