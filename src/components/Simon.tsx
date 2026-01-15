@@ -102,7 +102,7 @@ const Simon = () => {
   }, [dayNumber])
 
   // Initialize audio context on first interaction
-  const initAudio = useCallback(() => {
+  const initAudio = useCallback(async () => {
     if (!audioContextRef.current) {
       /* eslint-disable no-undef */
       const AudioContextClass =
@@ -111,19 +111,20 @@ const Simon = () => {
       /* eslint-enable no-undef */
       audioContextRef.current = new AudioContextClass()
     }
+    // Mobile browsers require resume() to be awaited after user gesture
+    if (audioContextRef.current.state === 'suspended') {
+      await audioContextRef.current.resume()
+    }
     return audioContextRef.current
   }, [])
 
   // Play a tone for a button
   const playTone = useCallback(
-    (buttonIndex: number, duration = 300) => {
+    async (buttonIndex: number, duration = 300) => {
       if (!soundEnabled) return
 
       try {
-        const ctx = initAudio()
-        if (ctx.state === 'suspended') {
-          ctx.resume()
-        }
+        const ctx = await initAudio()
 
         const oscillator = ctx.createOscillator()
         const gainNode = ctx.createGain()
@@ -140,21 +141,18 @@ const Simon = () => {
         oscillator.start(ctx.currentTime)
         oscillator.stop(ctx.currentTime + duration / 1000)
       } catch {
-        console.log('Audio not available')
+        // Audio not available - fail silently
       }
     },
     [soundEnabled, initAudio]
   )
 
   // Play error sound
-  const playErrorSound = useCallback(() => {
+  const playErrorSound = useCallback(async () => {
     if (!soundEnabled) return
 
     try {
-      const ctx = initAudio()
-      if (ctx.state === 'suspended') {
-        ctx.resume()
-      }
+      const ctx = await initAudio()
 
       const oscillator = ctx.createOscillator()
       const gainNode = ctx.createGain()
@@ -171,7 +169,7 @@ const Simon = () => {
       oscillator.start(ctx.currentTime)
       oscillator.stop(ctx.currentTime + 0.5)
     } catch {
-      console.log('Audio not available')
+      // Audio not available - fail silently
     }
   }, [soundEnabled, initAudio])
 
@@ -347,8 +345,8 @@ const Simon = () => {
     }
   }
 
-  const handleStart = () => {
-    initAudio()
+  const handleStart = async () => {
+    await initAudio()
     setGameState('playing')
     startRound(round)
   }
