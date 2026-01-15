@@ -101,8 +101,8 @@ const Simon = () => {
     }
   }, [dayNumber])
 
-  // Initialize audio context on first interaction
-  const initAudio = useCallback(async () => {
+  // Initialize audio context - must be called synchronously from user gesture
+  const initAudio = useCallback(() => {
     if (!audioContextRef.current) {
       /* eslint-disable no-undef */
       const AudioContextClass =
@@ -111,20 +111,33 @@ const Simon = () => {
       /* eslint-enable no-undef */
       audioContextRef.current = new AudioContextClass()
     }
-    // Mobile browsers require resume() to be awaited after user gesture
-    if (audioContextRef.current.state === 'suspended') {
-      await audioContextRef.current.resume()
-    }
     return audioContextRef.current
   }, [])
 
+  // Unlock audio for iOS - play silent buffer synchronously on user gesture
+  const unlockAudio = useCallback(() => {
+    const ctx = initAudio()
+    if (ctx.state === 'suspended') {
+      ctx.resume()
+    }
+    // Play a silent buffer to fully unlock audio on iOS
+    const buffer = ctx.createBuffer(1, 1, 22050)
+    const source = ctx.createBufferSource()
+    source.buffer = buffer
+    source.connect(ctx.destination)
+    source.start(0)
+  }, [initAudio])
+
   // Play a tone for a button
   const playTone = useCallback(
-    async (buttonIndex: number, duration = 300) => {
+    (buttonIndex: number, duration = 300) => {
       if (!soundEnabled) return
 
       try {
-        const ctx = await initAudio()
+        const ctx = initAudio()
+        if (ctx.state === 'suspended') {
+          ctx.resume()
+        }
 
         const oscillator = ctx.createOscillator()
         const gainNode = ctx.createGain()
@@ -148,11 +161,14 @@ const Simon = () => {
   )
 
   // Play error sound
-  const playErrorSound = useCallback(async () => {
+  const playErrorSound = useCallback(() => {
     if (!soundEnabled) return
 
     try {
-      const ctx = await initAudio()
+      const ctx = initAudio()
+      if (ctx.state === 'suspended') {
+        ctx.resume()
+      }
 
       const oscillator = ctx.createOscillator()
       const gainNode = ctx.createGain()
@@ -229,8 +245,8 @@ const Simon = () => {
     (buttonIndex: number) => {
       if (!isPlayerTurn || isPlaying) return
 
-      // Initialize audio on first interaction
-      initAudio()
+      // Unlock audio on user interaction for iOS
+      unlockAudio()
 
       setActiveButton(buttonIndex)
       playTone(buttonIndex, 200)
@@ -322,7 +338,7 @@ const Simon = () => {
       playTone,
       playErrorSound,
       playSequence,
-      initAudio,
+      unlockAudio,
     ]
   )
 
@@ -345,8 +361,9 @@ const Simon = () => {
     }
   }
 
-  const handleStart = async () => {
-    await initAudio()
+  const handleStart = () => {
+    // Must unlock audio synchronously on user gesture for iOS
+    unlockAudio()
     setGameState('playing')
     startRound(round)
   }
