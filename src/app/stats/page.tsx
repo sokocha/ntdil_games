@@ -9,6 +9,8 @@ import {
   requestNotificationPermission,
   getNotificationPermission,
   scheduleLocalNotification,
+  hasSeenNotificationPrompt,
+  markNotificationPromptSeen,
   NotificationPrefs,
 } from '@/lib/notifications'
 
@@ -22,8 +24,27 @@ export default function StatsPage() {
 
   useEffect(() => {
     setStats(loadAllStats())
-    setNotifPrefs(loadNotificationPrefs())
+    const prefs = loadNotificationPrefs()
+    setNotifPrefs(prefs)
     setNotifPermission(getNotificationPermission())
+
+    // Auto-prompt for notification permission on first visit
+    if (prefs.enabled && !hasSeenNotificationPrompt()) {
+      markNotificationPromptSeen()
+      requestNotificationPermission().then((granted) => {
+        if (granted) {
+          saveNotificationPrefs(prefs)
+          scheduleLocalNotification()
+          setNotifPermission('granted')
+        } else {
+          // If denied, turn off the toggle
+          const newPrefs = { ...prefs, enabled: false }
+          setNotifPrefs(newPrefs)
+          saveNotificationPrefs(newPrefs)
+          setNotifPermission(getNotificationPermission())
+        }
+      })
+    }
   }, [])
 
   if (!stats) {

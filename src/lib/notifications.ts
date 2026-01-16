@@ -16,13 +16,25 @@ export function loadNotificationPrefs(): NotificationPrefs {
 
   const saved = localStorage.getItem(NOTIFICATION_PREF_KEY)
   if (!saved) {
-    return { enabled: false, time: '09:00' }
+    // Default to enabled - will prompt for permission on first visit
+    return { enabled: true, time: '09:00' }
   }
 
   try {
     return JSON.parse(saved)
   } catch {
-    return { enabled: false, time: '09:00' }
+    return { enabled: true, time: '09:00' }
+  }
+}
+
+export function hasSeenNotificationPrompt(): boolean {
+  if (typeof window === 'undefined') return true
+  return localStorage.getItem('ntdil-notification-prompted') === 'true'
+}
+
+export function markNotificationPromptSeen(): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('ntdil-notification-prompted', 'true')
   }
 }
 
