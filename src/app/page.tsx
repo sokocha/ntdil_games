@@ -54,6 +54,16 @@ export default function Home() {
               )}
             </div>
           ))}
+
+          {/* Stats Card */}
+          <Link
+            href="/stats"
+            className="block p-6 rounded-xl border border-gray-800 hover:border-gray-600 hover:bg-gray-900 transition-all"
+          >
+            <div className="text-4xl mb-3">📊</div>
+            <h2 className="text-xl font-semibold mb-1">Your Stats</h2>
+            <p className="text-gray-400 text-sm">View history, streaks, and set daily reminders</p>
+          </Link>
         </div>
       </div>
     </main>
