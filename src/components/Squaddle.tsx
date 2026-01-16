@@ -22,6 +22,7 @@ import {
   getAverageScore,
   getGamesPlayed,
 } from '@/lib/game-utils'
+import { trackGamePlay } from '@/lib/analytics'
 import {
   unlockAudio,
   feedbackWrong,
@@ -213,6 +214,8 @@ export default function Squaddle() {
       setGameState(saved)
     } else {
       setGameState(initializeGameState(today))
+      // Track new game play (only for new games, not resumed)
+      trackGamePlay('squaddle')
     }
 
     // Show onboarding for first-time players

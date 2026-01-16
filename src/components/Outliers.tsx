@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { unlockAudio, feedbackCorrect, feedbackWrong, feedbackGameComplete } from '@/lib/feedback'
+import { trackGamePlay } from '@/lib/analytics'
 import StreakToast from '@/components/StreakToast'
 
 // Type definitions
@@ -134,7 +135,13 @@ export default function Outlier() {
               setRoundResults(saved.lastResults || [])
               setCurrentRound(3)
               setGameState(saved.lastGameState || 'lost')
+            } else {
+              // Track new game play (only for new games, not already played)
+              trackGamePlay('outliers')
             }
+          } else {
+            // No saved data, this is a new player
+            trackGamePlay('outliers')
           }
         } else {
           console.error('Failed to fetch puzzle from API')

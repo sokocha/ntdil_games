@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { trackGamePlay } from '@/lib/analytics'
 
 const seededRandom = (seed: number): number => {
   const x = Math.sin(seed) * 10000
@@ -423,6 +424,10 @@ const Simon = () => {
     unlockAudio()
     setGameState('countdown')
     setCountdown(3)
+    // Track new game play (only on first round)
+    if (round === 0) {
+      trackGamePlay('simon')
+    }
   }
 
   const getStarRating = (score: number): number => {

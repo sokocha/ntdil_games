@@ -75,7 +75,7 @@ export async function PUT(request: NextRequest) {
         connection,
         items,
         outliers,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       })
       .where(eq(categories.id, id))
       .returning()

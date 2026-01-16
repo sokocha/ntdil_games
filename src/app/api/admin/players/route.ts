@@ -66,7 +66,7 @@ export async function PUT(request: NextRequest) {
         acceptedAnswers,
         clues,
         difficulty,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       })
       .where(eq(players.id, id))
       .returning()
