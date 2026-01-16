@@ -26,7 +26,29 @@ interface Category {
   outliers: string[]
 }
 
-type Tab = 'schedule' | 'players' | 'categories'
+type Tab = 'schedule' | 'players' | 'categories' | 'analytics'
+
+interface AnalyticsData {
+  summary: {
+    totalUniquePlayers: number
+    uniqueIPAddresses: number
+  }
+  byGame: {
+    game: string
+    uniquePlayers: number
+    totalPlays: number
+  }[]
+  dailyStats: {
+    date: string
+    game: string
+    uniquePlayers: number
+  }[]
+  dailyTotals: {
+    date: string
+    uniquePlayers: number
+    totalPlays: number
+  }[]
+}
 
 // Helper to get today's date string in local timezone
 function getLocalTodayString(): string {
@@ -79,6 +101,9 @@ export default function AdminPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [showCategoryForm, setShowCategoryForm] = useState(false)
+
+  // Analytics state
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
 
   // Upload state
   const [showUploadModal, setShowUploadModal] = useState(false)
@@ -157,13 +182,33 @@ export default function AdminPage() {
     setLoading(false)
   }, [token])
 
+  const fetchAnalytics = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/analytics', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.status === 401) {
+        setIsAuthenticated(false)
+        setError('Invalid password')
+        return
+      }
+      const data = await res.json()
+      setAnalytics(data)
+    } catch {
+      setError('Failed to fetch analytics')
+    }
+    setLoading(false)
+  }, [token])
+
   useEffect(() => {
     if (isAuthenticated && token) {
       fetchPlayers()
       fetchCategories()
       fetchSchedule()
+      fetchAnalytics()
     }
-  }, [isAuthenticated, token, fetchPlayers, fetchCategories, fetchSchedule])
+  }, [isAuthenticated, token, fetchPlayers, fetchCategories, fetchSchedule, fetchAnalytics])
 
   const savePlayer = async (player: Partial<Player>) => {
     setLoading(true)
@@ -589,6 +634,16 @@ export default function AdminPage() {
           >
             Outliers Categories ({categories.length})
           </button>
+          <button
+            onClick={() => setTab('analytics')}
+            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+              tab === 'analytics'
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+            }`}
+          >
+            Analytics
+          </button>
         </div>
 
         {loading && <p className="text-gray-400 mb-4">Loading...</p>}
@@ -868,6 +923,191 @@ export default function AdminPage() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Analytics Tab */}
+        {tab === 'analytics' && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-white">Player Analytics</h2>
+              <button
+                onClick={fetchAnalytics}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white"
+              >
+                Refresh
+              </button>
+            </div>
+
+            {analytics ? (
+              <div className="space-y-6">
+                {/* Summary Cards */}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                    <p className="text-gray-400 text-sm uppercase tracking-wide mb-2">
+                      Total Unique Players
+                    </p>
+                    <p className="text-4xl font-bold text-purple-400">
+                      {analytics.summary.totalUniquePlayers}
+                    </p>
+                    <p className="text-gray-500 text-sm mt-2">Based on browser localStorage IDs</p>
+                  </div>
+                  <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                    <p className="text-gray-400 text-sm uppercase tracking-wide mb-2">
+                      Unique IP Addresses
+                    </p>
+                    <p className="text-4xl font-bold text-blue-400">
+                      {analytics.summary.uniqueIPAddresses}
+                    </p>
+                    <p className="text-gray-500 text-sm mt-2">
+                      May differ due to VPNs, shared networks
+                    </p>
+                  </div>
+                </div>
+
+                {/* Per Game Stats */}
+                <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                  <h3 className="text-lg font-semibold text-white mb-4">Players by Game</h3>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    {analytics.byGame.map((game) => (
+                      <div
+                        key={game.game}
+                        className={`p-4 rounded-lg ${
+                          game.game === 'squaddle'
+                            ? 'bg-green-900/30 border border-green-700'
+                            : game.game === 'outliers'
+                              ? 'bg-purple-900/30 border border-purple-700'
+                              : 'bg-blue-900/30 border border-blue-700'
+                        }`}
+                      >
+                        <p className="text-gray-300 text-sm uppercase tracking-wide mb-1">
+                          {game.game === 'squaddle'
+                            ? 'Squaddle'
+                            : game.game === 'outliers'
+                              ? 'Outliers'
+                              : 'Simon Says'}
+                        </p>
+                        <p className="text-3xl font-bold text-white">{game.uniquePlayers}</p>
+                        <p className="text-gray-400 text-sm">unique players</p>
+                        <p className="text-gray-500 text-sm mt-2">
+                          {game.totalPlays} total game sessions
+                        </p>
+                      </div>
+                    ))}
+                    {analytics.byGame.length === 0 && (
+                      <p className="text-gray-500 col-span-3">No game data yet</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Daily Totals */}
+                <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                  <h3 className="text-lg font-semibold text-white mb-4">
+                    Daily Activity (Last 30 Days)
+                  </h3>
+                  {analytics.dailyTotals.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left">
+                        <thead>
+                          <tr className="border-b border-gray-700">
+                            <th className="py-2 px-3 text-gray-400 font-medium">Date</th>
+                            <th className="py-2 px-3 text-gray-400 font-medium text-right">
+                              Unique Players
+                            </th>
+                            <th className="py-2 px-3 text-gray-400 font-medium text-right">
+                              Total Sessions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {analytics.dailyTotals.map((day, i) => (
+                            <tr
+                              key={day.date}
+                              className={`border-b border-gray-700/50 ${
+                                i === 0 ? 'bg-purple-900/20' : ''
+                              }`}
+                            >
+                              <td className="py-2 px-3 text-white">
+                                {day.date}
+                                {i === 0 && (
+                                  <span className="ml-2 px-2 py-0.5 bg-purple-600 text-white text-xs rounded">
+                                    Today
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-2 px-3 text-right text-purple-400 font-semibold">
+                                {day.uniquePlayers}
+                              </td>
+                              <td className="py-2 px-3 text-right text-gray-400">
+                                {day.totalPlays}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No daily data yet</p>
+                  )}
+                </div>
+
+                {/* Daily Stats by Game */}
+                <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                  <h3 className="text-lg font-semibold text-white mb-4">Daily Breakdown by Game</h3>
+                  {analytics.dailyStats.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left">
+                        <thead>
+                          <tr className="border-b border-gray-700">
+                            <th className="py-2 px-3 text-gray-400 font-medium">Date</th>
+                            <th className="py-2 px-3 text-gray-400 font-medium">Game</th>
+                            <th className="py-2 px-3 text-gray-400 font-medium text-right">
+                              Unique Players
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {analytics.dailyStats.slice(0, 30).map((stat) => (
+                            <tr
+                              key={`${stat.date}-${stat.game}`}
+                              className="border-b border-gray-700/50"
+                            >
+                              <td className="py-2 px-3 text-white">{stat.date}</td>
+                              <td className="py-2 px-3">
+                                <span
+                                  className={`px-2 py-1 rounded text-sm ${
+                                    stat.game === 'squaddle'
+                                      ? 'bg-green-900/50 text-green-400'
+                                      : stat.game === 'outliers'
+                                        ? 'bg-purple-900/50 text-purple-400'
+                                        : 'bg-blue-900/50 text-blue-400'
+                                  }`}
+                                >
+                                  {stat.game === 'squaddle'
+                                    ? 'Squaddle'
+                                    : stat.game === 'outliers'
+                                      ? 'Outliers'
+                                      : 'Simon Says'}
+                                </span>
+                              </td>
+                              <td className="py-2 px-3 text-right text-white font-semibold">
+                                {stat.uniquePlayers}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No game data yet</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-gray-800 p-8 rounded-lg border border-gray-700 text-center">
+                <p className="text-gray-400">Loading analytics data...</p>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -34,8 +34,20 @@ export const categories = pgTable('categories', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
 
+// Game analytics tracking table
+export const gamePlays = pgTable('game_plays', {
+  id: serial('id').primaryKey(),
+  uniquePlayerId: text('unique_player_id').notNull(), // UUID stored in localStorage
+  ipAddress: text('ip_address'), // Backup identifier
+  game: text('game').notNull().$type<'squaddle' | 'outliers' | 'simon'>(),
+  playDate: text('play_date').notNull(), // YYYY-MM-DD format
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
 // Types for TypeScript
 export type Player = typeof players.$inferSelect
 export type NewPlayer = typeof players.$inferInsert
 export type Category = typeof categories.$inferSelect
 export type NewCategory = typeof categories.$inferInsert
+export type GamePlay = typeof gamePlays.$inferSelect
+export type NewGamePlay = typeof gamePlays.$inferInsert
