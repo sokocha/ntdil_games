@@ -55,6 +55,17 @@ export default function Home() {
             </div>
           ))}
         </div>
+
+        {/* Stats Link */}
+        <div className="mt-8 text-center">
+          <Link
+            href="/stats"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-gray-700 hover:border-gray-500 hover:bg-gray-900 transition-all text-gray-300 hover:text-white"
+          >
+            <span>📊</span>
+            <span>View Your Stats</span>
+          </Link>
+        </div>
       </div>
     </main>
   )

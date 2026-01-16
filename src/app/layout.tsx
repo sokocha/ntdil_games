@@ -1,10 +1,25 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import Navbar from '@/components/Navbar'
+import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration'
 
 export const metadata: Metadata = {
   title: 'NTDIL Games',
   description: 'Daily games to challenge your brain',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'NTDIL Games',
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#030712',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 }
 
 export default function RootLayout({
@@ -14,7 +29,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <link rel="apple-touch-icon" href="/icons/icon.svg" />
+      </head>
       <body className="antialiased min-h-screen bg-gray-950 text-white">
+        <ServiceWorkerRegistration />
         <Navbar />
         {children}
       </body>
