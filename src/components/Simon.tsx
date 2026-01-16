@@ -447,7 +447,7 @@ const Simon = () => {
       return '🔴'
     }
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
-    const text = `🎹 Simon Day ${dayNumber}\n\n${'⭐'.repeat(stars)}${'☆'.repeat(5 - stars)}\nScore: ${totalScore}/300\nLongest Streak: ${streak}\n\n${getEmoji(scores[0])} Easy: ${scores[0] || 0}\n${getEmoji(scores[1])} Medium: ${scores[1] || 0}\n${getEmoji(scores[2])} Hard: ${scores[2] || 0}\n\n${baseUrl}/simon`
+    const text = `🎹 Simon Says Day ${dayNumber}\n\n${'⭐'.repeat(stars)}${'☆'.repeat(5 - stars)}\nScore: ${totalScore}/300\nLongest Streak: ${streak}\n\n${getEmoji(scores[0])} Easy: ${scores[0] || 0}\n${getEmoji(scores[1])} Medium: ${scores[1] || 0}\n${getEmoji(scores[2])} Hard: ${scores[2] || 0}\n\n${baseUrl}/simon`
     navigator.clipboard.writeText(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
@@ -476,7 +476,7 @@ const Simon = () => {
               Day {dayNumber}
             </div>
             <h1 style={{ fontSize: '32px', color: 'white', margin: '0 0 16px 0' }}>
-              🎹 Simon Complete!
+              🎹 Simon Says Complete!
             </h1>
             <div style={{ fontSize: '48px', marginBottom: '8px' }}>
               {'⭐'.repeat(stars)}
@@ -577,7 +577,7 @@ const Simon = () => {
       >
         <div style={{ maxWidth: '500px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '24px', paddingTop: '20px' }}>
-            <h1 style={{ fontSize: '28px', color: 'white', margin: '0 0 8px 0' }}>🎹 Simon</h1>
+            <h1 style={{ fontSize: '28px', color: 'white', margin: '0 0 8px 0' }}>🎹 Simon Says</h1>
             <div style={{ fontSize: '14px', color: '#64748b' }}>Day {dayNumber}</div>
           </div>
 
@@ -704,7 +704,7 @@ const Simon = () => {
       >
         <div style={{ maxWidth: '500px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '24px', paddingTop: '20px' }}>
-            <h1 style={{ fontSize: '32px', color: 'white', margin: '0 0 8px 0' }}>🎹 Simon</h1>
+            <h1 style={{ fontSize: '32px', color: 'white', margin: '0 0 8px 0' }}>🎹 Simon Says</h1>
             <div style={{ fontSize: '14px', color: '#64748b' }}>Day {dayNumber}</div>
           </div>
 
@@ -833,7 +833,7 @@ const Simon = () => {
       <div style={{ maxWidth: '400px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '16px', paddingTop: '10px' }}>
-          <h1 style={{ fontSize: '24px', color: 'white', margin: '0 0 4px 0' }}>🎹 Simon</h1>
+          <h1 style={{ fontSize: '24px', color: 'white', margin: '0 0 4px 0' }}>🎹 Simon Says</h1>
           <div style={{ fontSize: '12px', color: '#64748b' }}>Day {dayNumber}</div>
         </div>
 
