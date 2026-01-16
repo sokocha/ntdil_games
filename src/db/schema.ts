@@ -17,9 +17,9 @@ export const players = pgTable('players', {
     }>()
     .notNull(),
   difficulty: text('difficulty').$type<'easy' | 'medium' | 'hard'>().notNull(),
-  scheduledDate: text('scheduled_date'), // YYYY-MM-DD format, null for unscheduled
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  scheduledDate: text('scheduled_date'), // YYYY-MM-DD format, null for unscheduled
 })
 
 // Outliers categories table
@@ -29,9 +29,9 @@ export const categories = pgTable('categories', {
   connection: text('connection').notNull(),
   items: jsonb('items').$type<string[]>().notNull(),
   outliers: jsonb('outliers').$type<string[]>().notNull(),
-  scheduledDate: text('scheduled_date'), // YYYY-MM-DD format, null for unscheduled
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  scheduledDate: text('scheduled_date'), // YYYY-MM-DD format, null for unscheduled
 })
 
 // Game analytics tracking table
