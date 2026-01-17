@@ -1,6 +1,6 @@
 {
-  "name": "NTDIL Games",
-  "short_name": "NTDIL",
+  "name": "PlayDay",
+  "short_name": "PlayDay",
   "description": "Daily games to challenge your brain",
   "start_url": "/",
   "display": "standalone",

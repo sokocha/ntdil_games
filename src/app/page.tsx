@@ -29,7 +29,7 @@ export default function Home() {
     <main className="min-h-screen p-8">
       <div className="max-w-4xl mx-auto">
         <header className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-2">NTDIL Games</h1>
+          <h1 className="text-4xl font-bold mb-2">PlayDay</h1>
           <p className="text-gray-400">Daily games to challenge your brain</p>
         </header>
 

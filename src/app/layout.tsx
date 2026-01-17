@@ -4,13 +4,13 @@ import Navbar from '@/components/Navbar'
 import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration'
 
 export const metadata: Metadata = {
-  title: 'NTDIL Games',
+  title: 'PlayDay',
   description: 'Daily games to challenge your brain',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'NTDIL Games',
+    title: 'PlayDay',
   },
 }
 

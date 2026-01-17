@@ -1,7 +1,7 @@
 import Outlier from '@/components/Outliers'
 
 export const metadata = {
-  title: 'Outliers | NTDIL Games',
+  title: 'Outliers | PlayDay',
   description: 'Find the word that does not belong in the group',
 }
 

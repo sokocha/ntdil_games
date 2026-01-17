@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ntdil-games-v1'
+const CACHE_NAME = 'playday-v2'
 const STATIC_ASSETS = [
   '/',
   '/squaddle',
@@ -81,7 +81,7 @@ self.addEventListener('fetch', (event) => {
 // Push notification event
 self.addEventListener('push', (event) => {
   const data = event.data ? event.data.json() : {}
-  const title = data.title || 'NTDIL Games'
+  const title = data.title || 'PlayDay'
   const options = {
     body: data.body || 'Time to play your daily games!',
     icon: '/icons/icon-192.png',

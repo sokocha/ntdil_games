@@ -114,7 +114,7 @@ export function showDailyReminder(): void {
     }
   }
 
-  new Notification('NTDIL Games', {
+  new Notification('PlayDay', {
     body: message,
     icon: '/icons/icon.svg',
     tag: 'daily-reminder',

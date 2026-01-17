@@ -20,7 +20,7 @@ export default function Navbar() {
               <span>Back to Games</span>
             </Link>
           )}
-          {isHome && <span className="text-sm font-semibold text-white">NTDIL Games</span>}
+          {isHome && <span className="text-sm font-semibold text-white">PlayDay</span>}
         </div>
       </div>
     </nav>
