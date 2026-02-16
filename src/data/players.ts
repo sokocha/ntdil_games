@@ -7,7 +7,7 @@ export const players: Player[] = [
     name: 'Cristiano Ronaldo',
     acceptedAnswers: ['ronaldo', 'cristiano ronaldo', 'cr7', 'cristiano'],
     clues: {
-      position: 'Forward / Winger',
+      position: 'Forward / Winger — Right-footed',
       trophies: "5x Champions League, 5x Ballon d'Or, Euro 2016",
       stats: 'All-time top international goalscorer with 130+ goals',
       international: 'Portugal captain, 200+ caps',
@@ -21,7 +21,7 @@ export const players: Player[] = [
     name: 'Lionel Messi',
     acceptedAnswers: ['messi', 'lionel messi', 'leo messi', 'leo'],
     clues: {
-      position: 'Forward / Attacking Midfielder',
+      position: 'Forward / Attacking Midfielder — Left-footed',
       trophies: "4x Champions League, 8x Ballon d'Or, World Cup 2022",
       stats: '800+ career goals, most goals in a calendar year (91)',
       international: 'Argentina captain, Copa America winner',
@@ -35,7 +35,7 @@ export const players: Player[] = [
     name: 'Kylian Mbappé',
     acceptedAnswers: ['mbappe', 'kylian mbappe', 'mbappé', 'kylian mbappé'],
     clues: {
-      position: 'Forward',
+      position: 'Forward — Right-footed',
       trophies: 'World Cup 2018, 6x Ligue 1, Nations League 2021',
       stats: 'Youngest French player to score at a World Cup',
       international: 'France, scored hat-trick in World Cup final',
@@ -51,7 +51,7 @@ export const players: Player[] = [
     name: 'Luka Modrić',
     acceptedAnswers: ['modric', 'luka modric', 'modrić', 'luka modrić'],
     clues: {
-      position: 'Central Midfielder',
+      position: 'Central Midfielder — Right-footed',
       trophies: "5x Champions League, Ballon d'Or 2018",
       stats: 'Over 500 appearances for Real Madrid',
       international: 'Croatia captain, World Cup 2018 finalist',
@@ -65,7 +65,7 @@ export const players: Player[] = [
     name: 'Karim Benzema',
     acceptedAnswers: ['benzema', 'karim benzema', 'benz', 'kb9'],
     clues: {
-      position: 'Striker',
+      position: 'Striker — Right-footed',
       trophies: "5x Champions League, Ballon d'Or 2022",
       stats: "Real Madrid's 2nd all-time top scorer",
       international: 'France, returned from 6-year exile',
@@ -79,7 +79,7 @@ export const players: Player[] = [
     name: 'Mohamed Salah',
     acceptedAnswers: ['salah', 'mohamed salah', 'mo salah', 'mohammad salah'],
     clues: {
-      position: 'Right Winger / Forward',
+      position: 'Right Winger / Forward — Left-footed',
       trophies: 'Champions League 2019, Premier League 2020',
       stats: 'Premier League Golden Boot winner 3x',
       international: 'Egypt, African Player of the Year 2x',
@@ -95,7 +95,7 @@ export const players: Player[] = [
     name: 'Gavi',
     acceptedAnswers: ['gavi', 'pablo gavi', 'pablo páez gavi'],
     clues: {
-      position: 'Central Midfielder',
+      position: 'Central Midfielder — Right-footed',
       trophies: 'La Liga 2023, Golden Boy 2022',
       stats: 'Youngest Barcelona player in El Clásico (17 years old)',
       international: 'Spain, Euro 2024 squad',
@@ -109,7 +109,7 @@ export const players: Player[] = [
     name: 'Jude Bellingham',
     acceptedAnswers: ['bellingham', 'jude bellingham'],
     clues: {
-      position: 'Central / Attacking Midfielder',
+      position: 'Central / Attacking Midfielder — Right-footed',
       trophies: 'La Liga 2024, Champions League 2024',
       stats: 'Scored 23 goals in debut La Liga season',
       international: 'England, youngest player at Euro 2020',
@@ -123,7 +123,7 @@ export const players: Player[] = [
     name: 'Bukayo Saka',
     acceptedAnswers: ['saka', 'bukayo saka'],
     clues: {
-      position: 'Right Winger',
+      position: 'Right Winger — Left-footed',
       trophies: 'FA Cup 2020',
       stats: "Arsenal's top scorer and assister 2022-23",
       international: 'England, missed crucial Euro 2020 penalty',
